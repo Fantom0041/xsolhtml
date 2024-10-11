@@ -24,36 +24,101 @@ function generateHtmlFile(data) {
 
     const htmlContent = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Event Details - ${id}</title>
         <style>
-            body { display: flex; flex-direction: column; align-items: center; }
-            .photos { display: flex; flex-direction: column; width: 100%; max-width: 600px; }
-            .photo { width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px; }
-            .events-list { width: 100%; max-width: 600px; }
-            .event { cursor: pointer; padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; }
-            .event.selected { background-color: #e0e0e0; }
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                margin: 0;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .photos {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+            .photo {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+                object-fit: cover;
+            }
+            .events-list {
+                width: 100%;
+            }
+            .event {
+                cursor: pointer;
+                padding: 15px;
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+                border-radius: 5px;
+                transition: background-color 0.3s ease;
+            }
+            .event.selected {
+                background-color: #e0e0e0;
+            }
+            .event p {
+                margin: 5px 0;
+            }
+            .actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            button {
+                padding: 10px 15px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            @media (min-width: 768px) {
+                .photos {
+                    flex-direction: row;
+                }
+                .photo {
+                    width: 50%;
+                }
+            }
         </style>
     </head>
     <body>
-        <div class="photos">
-            <img id="photo_cur" class="photo" src="${events[0].photo_cur}" alt="Current Photo">
-            <img id="photo_org" class="photo" src="${events[0].photo_org}" alt="Original Photo">
-        </div>
-        <div class="events-list">
-            <h1>Events - ID: ${id}</h1>
-            ${events.map((event, index) => `
-                <div class="event ${index === 0 ? 'selected' : ''}" onclick="selectEvent(${index})">
-                    <p>Date: ${event.date}</p>
-                    <p>Card ID: ${event.card_id}</p>
-                    <p>Description: ${event.description}</p>
-                    <p>Color: ${event.color}</p>
+        <div class="container">
+            <div class="photos">
+                <img id="photo_cur" class="photo" src="${events[0].photo_cur}" alt="Current Photo">
+                <img id="photo_org" class="photo" src="${events[0].photo_org}" alt="Original Photo">
+            </div>
+            <div class="events-list">
+                <h1>Events - ID: ${id}</h1>
+                ${events.map((event, index) => `
+                    <div class="event ${index === 0 ? 'selected' : ''}" onclick="selectEvent(${index})">
+                        <p><strong>Date:</strong> ${event.date}</p>
+                        <p><strong>Card ID:</strong> ${event.card_id}</p>
+                        <p><strong>Description:</strong> ${event.description}</p>
+                        <p><strong>Color:</strong> ${event.color}</p>
+                    </div>
+                `).join('')}
+                <div class="actions">
+                    <button onclick="handleAction('info')">Info</button>
+                    <button onclick="handleAction('block')">Block Card</button>
+                    <button onclick="handleAction('unblock')">Unblock Card</button>
                 </div>
-            `).join('')}
-            <button onclick="handleAction('info')">Info</button>
-            <button onclick="handleAction('block')">Block Card</button>
-            <button onclick="handleAction('unblock')">Unblock Card</button>
+            </div>
         </div>
 
         <script>

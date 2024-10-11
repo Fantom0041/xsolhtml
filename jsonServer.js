@@ -9,7 +9,7 @@ xsolApp.use(express.json());
 // Mock data generator function
 function generateMockData() {
     return {
-        id: Math.floor(Math.random() * 100) + 1,
+        id: Math.floor(Math.random() * 10) + 1,
         events: [
             {
                 date: new Date().toISOString(),
