@@ -19,8 +19,10 @@ app.post('/', (req, res) => {
 });
 
 function generateHtmlFile(data) {
-    const events = data.events;
-    const id = data.id;
+    const events = data.EVENTS;
+    const readerId = data.READER_ID;
+    const readerName = data.READER_NAME;
+    const timestamp = data.TIMESTAMP;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -28,7 +30,7 @@ function generateHtmlFile(data) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Event Details - ${id}</title>
+        <title>Event Details - ${readerId}</title>
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -40,18 +42,6 @@ function generateHtmlFile(data) {
             .container {
                 max-width: 800px;
                 margin: 0 auto;
-            }
-            .photos {
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                margin-bottom: 20px;
-            }
-            .photo {
-                width: 100%;
-                height: auto;
-                max-height: 400px;
-                object-fit: cover;
             }
             .events-list {
                 width: 100%;
@@ -87,27 +77,22 @@ function generateHtmlFile(data) {
             button:hover {
                 background-color: #0056b3;
             }
-            @media (min-width: 768px) {
-                .photo {
-                    max-width: 100%;
-                }
-            }
         </style>
     </head>
     <body>
         <div class="container">
-            <div class="photos">
-                <img id="photo_cur" class="photo" src="${events[0].photo_cur}" alt="Current Photo">
-                <img id="photo_org" class="photo" src="${events[0].photo_org}" alt="Original Photo">
-            </div>
             <div class="events-list">
-                <h1>Events - ID: ${id}</h1>
+                <h1>Events</h1>
+                <p><strong>Reader ID:</strong> ${readerId}</p>
+                <p><strong>Reader Name:</strong> ${readerName}</p>
+                <p><strong>Timestamp:</strong> ${timestamp}</p>
                 ${events.map((event, index) => `
                     <div class="event ${index === 0 ? 'selected' : ''}" onclick="selectEvent(${index})">
-                        <p><strong>Date:</strong> ${event.date}</p>
-                        <p><strong>Card ID:</strong> ${event.card_id}</p>
-                        <p><strong>Description:</strong> ${event.description}</p>
-                        <p><strong>Color:</strong> ${event.color}</p>
+                        <p><strong>ID:</strong> ${event.ID}</p>
+                        <p><strong>Date:</strong> ${event.DATE}</p>
+                        <p><strong>Ticket Name:</strong> ${event.TICKET_NAME}</p>
+                        <p><strong>Ticket Type:</strong> ${event.TICKET_TYPE}</p>
+                        <p><strong>Color:</strong> ${event.COLOR}</p>
                     </div>
                 `).join('')}
                 <div class="actions">
@@ -126,17 +111,10 @@ function generateHtmlFile(data) {
                 document.querySelectorAll('.event').forEach(el => el.classList.remove('selected'));
                 document.querySelectorAll('.event')[index].classList.add('selected');
                 selectedEventIndex = index;
-                updatePhotos();
-            }
-
-            function updatePhotos() {
-                const event = events[selectedEventIndex];
-                document.getElementById('photo_cur').src = event.photo_cur;
-                document.getElementById('photo_org').src = event.photo_org;
             }
 
             function handleAction(action) {
-                const cardId = events[selectedEventIndex].card_id;
+                const cardId = events[selectedEventIndex].ID;
                 fetch('/xsol-api-endpoint', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -157,7 +135,7 @@ function generateHtmlFile(data) {
     </html>
     `;
 
-    const filePath = path.join(htmlFolder, `${id}.html`);
+    const filePath = path.join(htmlFolder, `${readerId}.html`);
     fs.writeFileSync(filePath, htmlContent);
     console.log(`HTML file generated/updated: ${filePath}`);
 }

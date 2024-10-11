@@ -8,35 +8,25 @@ xsolApp.use(express.json());
 
 // Mock data generator function
 function generateMockData() {
+    const readerIds = ["66", "67", "68", "69", "70"];
+    const readerNames = ["ORCZYK_LR1", "ORCZYK_LR2", "ORCZYK_LR3", "ORCZYK_LR4", "ORCZYK_LR5"];
+    const ticketNames = ["NIEAKTUALNY!", "Taryfa serwisowa pkt", "Bilet normalny", "Bilet ulgowy"];
+    const ticketTypes = ["-1", "12", "1", "2"];
+    const colors = ["255", "22015", "65280", "16711680"];
+
+    const randomIndex = Math.floor(Math.random() * readerIds.length);
+
     return {
-        id: Math.floor(Math.random() * 10) + 1,
-        events: [
-            {
-                date: new Date().toISOString(),
-                card_id: `card-${Math.floor(Math.random() * 1000)}`,
-                description: "First mock event description",
-                color: ["red", "green", "blue", "yellow"][Math.floor(Math.random() * 4)],
-                photo_cur: "photos/cur1.png",
-                photo_org: "photos/org1.png"
-            },
-            {
-                date: new Date(Date.now() - 86400000).toISOString(),
-                card_id: `card-${Math.floor(Math.random() * 1000)}`,
-                description: "Second mock event description",
-                color: ["red", "green", "blue", "yellow"][Math.floor(Math.random() * 4)],
-                photo_cur: "photos/cur2.png",
-                photo_org: "photos/org2.png"
-            },
-            {
-                date: new Date(Date.now() - 172800000).toISOString(),
-                card_id: `card-${Math.floor(Math.random() * 1000)}`,
-                description: "Third mock event description",
-                color: ["red", "green", "blue", "yellow"][Math.floor(Math.random() * 4)],
-                photo_cur: "photos/cur1.png",
-                photo_org: "photos/org2.png"
-            }
-        ],
-        timestamp: new Date().toISOString()
+        READER_ID: readerIds[randomIndex],
+        READER_NAME: readerNames[randomIndex],
+        TIMESTAMP: new Date().toISOString().replace('T', ' ').substr(0, 19),
+        EVENTS: Array(8).fill().map(() => ({
+            ID: Math.floor(Math.random() * 1000000000 + 1000000000).toString(),
+            DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
+            TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
+            TICKET_TYPE: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+            COLOR: colors[Math.floor(Math.random() * colors.length)]
+        }))
     };
 }
 
