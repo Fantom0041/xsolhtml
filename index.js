@@ -29,17 +29,17 @@ function generateHtmlFile(data) {
             </style>
         </head>
         <body>
-            <h1>Event Details - Card ID: ${events.Card_id}</h1>
+            <h1>Event Details - Card ID: ${events.card_id}</h1>
             <div id="latestEvent" class="event-details active">
-                <p>Date: ${events.Date}</p>
-                <p>Description: ${events.Description}</p>
-                <p>Color: ${events.Color}</p>
-                <img src="${events.Photo_cur}" alt="Current Photo">
+                <p>Date: ${events.date}</p>
+                <p>Description: ${events.description}</p>
+                <p>Color: ${events.color}</p>
+                <img src="${events.photo_cur}" alt="Current Photo">
             </div>
 
-            <button onclick="handleAction('info', '${events.Card_id}')">Info</button>
-            <button onclick="handleAction('block', '${events.Card_id}')">Block Card</button>
-            <button onclick="handleAction('unblock', '${events.Card_id}')">Unblock Card</button>
+            <button onclick="handleAction('info', '${events.card_id}')">Info</button>
+            <button onclick="handleAction('block', '${events.card_id}')">Block Card</button>
+            <button onclick="handleAction('unblock', '${events.card_id}')">Unblock Card</button>
 
             <script>
                 function handleAction(action, cardId) {
