@@ -88,11 +88,8 @@ function generateHtmlFile(data) {
                 background-color: #0056b3;
             }
             @media (min-width: 768px) {
-                .photos {
-                    flex-direction: row;
-                }
                 .photo {
-                    width: 50%;
+                    max-width: 100%;
                 }
             }
         </style>
