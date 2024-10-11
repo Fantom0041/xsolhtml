@@ -16,24 +16,24 @@ function generateMockData() {
                 card_id: `card-${Math.floor(Math.random() * 1000)}`,
                 description: "First mock event description",
                 color: ["red", "green", "blue", "yellow"][Math.floor(Math.random() * 4)],
-                photo_org: "http://example.com/original1.jpg",
-                photo_cur: "http://example.com/current1.jpg"
+                photo_cur: "photos/cur1.png",
+                photo_org: "photos/org1.png"
             },
             {
-                date: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+                date: new Date(Date.now() - 86400000).toISOString(),
                 card_id: `card-${Math.floor(Math.random() * 1000)}`,
                 description: "Second mock event description",
                 color: ["red", "green", "blue", "yellow"][Math.floor(Math.random() * 4)],
-                photo_org: "http://example.com/original2.jpg",
-                photo_cur: "http://example.com/current2.jpg"
+                photo_cur: "photos/cur2.png",
+                photo_org: "photos/org2.png"
             },
             {
-                date: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                date: new Date(Date.now() - 172800000).toISOString(),
                 card_id: `card-${Math.floor(Math.random() * 1000)}`,
                 description: "Third mock event description",
                 color: ["red", "green", "blue", "yellow"][Math.floor(Math.random() * 4)],
-                photo_org: "http://example.com/original3.jpg",
-                photo_cur: "http://example.com/current3.jpg"
+                photo_cur: "photos/cur1.png",
+                photo_org: "photos/org2.png"
             }
         ],
         timestamp: new Date().toISOString()

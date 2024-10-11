@@ -4,16 +4,14 @@ const path = require('path');
 const app = express();
 const port = 3000;
 
-// Enable JSON body parsing
 app.use(express.json());
+app.use('/photos', express.static(path.join(__dirname, 'photos')));
 
-// Ensure the html folder exists
 const htmlFolder = path.join(__dirname, 'html');
 if (!fs.existsSync(htmlFolder)) {
     fs.mkdirSync(htmlFolder);
 }
 
-// Default route (API POST endpoint) - receives JSON data and generates HTML
 app.post('/', (req, res) => {
     const eventData = req.body;
     generateHtmlFile(eventData);
@@ -24,25 +22,24 @@ function generateHtmlFile(data) {
     const events = data.events;
     const id = data.id;
 
-    // Generate HTML content (using template literals for simplicity)
     const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
         <title>Event Details - ${id}</title>
         <style>
-            body { display: flex; }
-            .photos { width: 50%; }
-            .events-list { width: 50%; }
+            body { display: flex; flex-direction: column; align-items: center; }
+            .photos { display: flex; flex-direction: column; width: 100%; max-width: 600px; }
+            .photo { width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px; }
+            .events-list { width: 100%; max-width: 600px; }
             .event { cursor: pointer; padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; }
             .event.selected { background-color: #e0e0e0; }
-            .photo { width: 100%; height: 200px; border: 1px solid #ccc; margin-bottom: 10px; }
         </style>
     </head>
     <body>
         <div class="photos">
-            <div id="photo_org" class="photo">Photo Original</div>
-            <div id="photo_cur" class="photo">Photo Current</div>
+            <img id="photo_cur" class="photo" src="${events[0].photo_cur}" alt="Current Photo">
+            <img id="photo_org" class="photo" src="${events[0].photo_org}" alt="Original Photo">
         </div>
         <div class="events-list">
             <h1>Events - ID: ${id}</h1>
@@ -72,8 +69,8 @@ function generateHtmlFile(data) {
 
             function updatePhotos() {
                 const event = events[selectedEventIndex];
-                document.getElementById('photo_org').style.backgroundImage = \`url(\${event.photo_org})\`;
-                document.getElementById('photo_cur').style.backgroundImage = \`url(\${event.photo_cur})\`;
+                document.getElementById('photo_cur').src = event.photo_cur;
+                document.getElementById('photo_org').src = event.photo_org;
             }
 
             function handleAction(action) {
@@ -93,21 +90,16 @@ function generateHtmlFile(data) {
                     }
                 });
             }
-
-            // Initialize photos
-            updatePhotos();
         </script>
     </body>
     </html>
     `;
 
-    // Write the HTML content to a file in the html folder (e.g., 1.html, 2.html based on ID)
     const filePath = path.join(htmlFolder, `${id}.html`);
     fs.writeFileSync(filePath, htmlContent);
     console.log(`HTML file generated/updated: ${filePath}`);
 }
 
-// API GET endpoint - sends the generated HTML file
 app.get('/:id', (req, res) => {
     const cardId = req.params.id;
     const filePath = path.join(htmlFolder, `${cardId}.html`);
@@ -124,8 +116,6 @@ app.get('/:id', (req, res) => {
     });
 });
 
-// Start the server
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
-
