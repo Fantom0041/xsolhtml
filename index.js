@@ -1,10 +1,17 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 const port = 3000;
 
 // Enable JSON body parsing
 app.use(express.json());
+
+// Ensure the html folder exists
+const htmlFolder = path.join(__dirname, 'html');
+if (!fs.existsSync(htmlFolder)) {
+    fs.mkdirSync(htmlFolder);
+}
 
 // Default route (API POST endpoint) - receives JSON data and generates HTML
 app.post('/', (req, res) => {
@@ -14,64 +21,96 @@ app.post('/', (req, res) => {
 });
 
 function generateHtmlFile(data) {
-    const events = data.Events;
+    const events = data.events;
     const id = data.id;
 
     // Generate HTML content (using template literals for simplicity)
     const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Event Details - ${id}</title>
-            <style>
-                .event-details { display: none; }
-                .event-details.active { display: block; }
-            </style>
-        </head>
-        <body>
-            <h1>Event Details - Card ID: ${events.card_id}</h1>
-            <div id="latestEvent" class="event-details active">
-                <p>Date: ${events.date}</p>
-                <p>Description: ${events.description}</p>
-                <p>Color: ${events.color}</p>
-                <img src="${events.photo_cur}" alt="Current Photo">
-            </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Event Details - ${id}</title>
+        <style>
+            body { display: flex; }
+            .photos { width: 50%; }
+            .events-list { width: 50%; }
+            .event { cursor: pointer; padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; }
+            .event.selected { background-color: #e0e0e0; }
+            .photo { width: 100%; height: 200px; border: 1px solid #ccc; margin-bottom: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="photos">
+            <div id="photo_org" class="photo">Photo Original</div>
+            <div id="photo_cur" class="photo">Photo Current</div>
+        </div>
+        <div class="events-list">
+            <h1>Events - ID: ${id}</h1>
+            ${events.map((event, index) => `
+                <div class="event ${index === 0 ? 'selected' : ''}" onclick="selectEvent(${index})">
+                    <p>Date: ${event.date}</p>
+                    <p>Card ID: ${event.card_id}</p>
+                    <p>Description: ${event.description}</p>
+                    <p>Color: ${event.color}</p>
+                </div>
+            `).join('')}
+            <button onclick="handleAction('info')">Info</button>
+            <button onclick="handleAction('block')">Block Card</button>
+            <button onclick="handleAction('unblock')">Unblock Card</button>
+        </div>
 
-            <button onclick="handleAction('info', '${events.card_id}')">Info</button>
-            <button onclick="handleAction('block', '${events.card_id}')">Block Card</button>
-            <button onclick="handleAction('unblock', '${events.card_id}')">Unblock Card</button>
+        <script>
+            let selectedEventIndex = 0;
+            const events = ${JSON.stringify(events)};
 
-            <script>
-                function handleAction(action, cardId) {
-                    fetch('/xsol-api-endpoint', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: action, cardId: cardId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        // Update the page based on the response
-                        if (data.success) {
-                            alert(Action ${action} performed successfully);
-                        } else {
-                            alert(Action ${action} failed);
-                        }
-                    });
-                }
-            </script>
-        </body>
-        </html>
+            function selectEvent(index) {
+                document.querySelectorAll('.event').forEach(el => el.classList.remove('selected'));
+                document.querySelectorAll('.event')[index].classList.add('selected');
+                selectedEventIndex = index;
+                updatePhotos();
+            }
+
+            function updatePhotos() {
+                const event = events[selectedEventIndex];
+                document.getElementById('photo_org').style.backgroundImage = \`url(\${event.photo_org})\`;
+                document.getElementById('photo_cur').style.backgroundImage = \`url(\${event.photo_cur})\`;
+            }
+
+            function handleAction(action) {
+                const cardId = events[selectedEventIndex].card_id;
+                fetch('/xsol-api-endpoint', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action, cardId: cardId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.success) {
+                        alert('Action ' + action + ' performed successfully');
+                    } else {
+                        alert('Action ' + action + ' failed');
+                    }
+                });
+            }
+
+            // Initialize photos
+            updatePhotos();
+        </script>
+    </body>
+    </html>
     `;
 
-    // Write the HTML content to a file (e.g., 1.html, 2.html based on ID)
-    fs.writeFileSync(`${id}.html`, htmlContent);
+    // Write the HTML content to a file in the html folder (e.g., 1.html, 2.html based on ID)
+    const filePath = path.join(htmlFolder, `${id}.html`);
+    fs.writeFileSync(filePath, htmlContent);
+    console.log(`HTML file generated/updated: ${filePath}`);
 }
 
 // API GET endpoint - sends the generated HTML file
 app.get('/:id', (req, res) => {
     const cardId = req.params.id;
-    const filePath = `${cardId}.html`;
+    const filePath = path.join(htmlFolder, `${cardId}.html`);
 
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
