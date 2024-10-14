@@ -120,12 +120,14 @@
                     </div>
                 </div>
             `).join('');
+            
+            // Przewiń do zaznaczonego wydarzenia
+            scrollToSelectedEvent();
         }
 
         function selectEvent(index) {
             selectedEventIndex = index;
             renderEvents();
-            scrollToSelectedEvent();
         }
 
         function scrollToSelectedEvent() {
@@ -164,12 +166,12 @@
         });
 
         socket.on('updateData', (data) => {
-            console.log('Otrzymano zaktualizowane dane:', data);
+            console.log('Received update data:', data);
             const previousEventsCount = events.length;
             updateUI(data);
             if (events.length > previousEventsCount) {
-                selectedEventIndex = 0;
-                renderEvents();
+                // Jeśli pojawiły się nowe wydarzenia, przewiń do zaznaczonego
+                scrollToSelectedEvent();
             }
         });
     </script>
