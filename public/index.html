@@ -19,9 +19,6 @@
         }
         .events-list {
             width: 100%;
-            height: 100vh;
-            overflow-y: auto;
-            position: relative;
         }
         .event {
             cursor: pointer;
@@ -33,10 +30,6 @@
         }
         .event.selected {
             background-color: #e0e0e0;
-            position: sticky;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 1;
         }
         .event p {
             margin: 5px 0;
@@ -76,7 +69,7 @@
 </head>
 <body>
     <div id="app" class="container">
-        <div class="events-list" id="eventsList">
+        <div class="events-list">
             <h1>Events</h1>
             <p><strong>Reader ID:</strong> <span id="readerId"></span></p>
             <p><strong>Reader Name:</strong> <span id="readerName"></span></p>
@@ -138,7 +131,7 @@
         function scrollToSelectedEvent() {
             const selectedEvent = document.getElementById(`event-${selectedEventIndex}`);
             if (selectedEvent) {
-                selectedEvent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                selectedEvent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
 
@@ -177,20 +170,6 @@
             if (events.length > previousEventsCount) {
                 selectedEventIndex = 0;
                 renderEvents();
-            }
-        });
-
-        // Dodaj nową funkcję do odznaczania wydarzenia
-        function deselectEvent() {
-            selectedEventIndex = null;
-            renderEvents();
-        }
-
-        // Dodaj nasłuchiwanie kliknięć na cały dokument
-        document.addEventListener('click', function(event) {
-            const eventsList = document.getElementById('eventsList');
-            if (!eventsList.contains(event.target)) {
-                deselectEvent();
             }
         });
     </script>
