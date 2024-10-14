@@ -8,7 +8,7 @@ xsolApp.use(express.json());
 
 // Mock data generator function
 function generateMockData() {
-    const readerIds = ["66", "69", "70"];
+    const readerIds = ["66"];
     const readerNames = ["ORCZYK_LR1", "ORCZYK_LR2", "ORCZYK_LR3", "ORCZYK_LR4", "ORCZYK_LR5"];
     const ticketNames = ["NIEAKTUALNY!", "Taryfa serwisowa pkt", "Bilet normalny", "Bilet ulgowy"];
     const ticketTypes = ["-1", "12", "1", "2"];
@@ -25,6 +25,7 @@ function generateMockData() {
             DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
             TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
             TICKET_TYPE: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+            PHOTO_ORG: '/photoorg.png',
             COLOR: colors[Math.floor(Math.random() * colors.length)]
         }))
     };
@@ -46,7 +47,7 @@ function sendMockData() {
 sendMockData();
 
 // Optionally, send new mock data every 30 seconds
-setInterval(sendMockData, 10000);
+setInterval(sendMockData, 2000);
 
 xsolApp.post('/xsol-api-endpoint', (req, res) => {
     console.log("Xsol server received:", req.body);

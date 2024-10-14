@@ -120,14 +120,16 @@
 
         socket.on('connect', () => {
             const id = window.location.pathname.slice(1);
-            socket.emit('requestData', id);
+            socket.emit('join', id);
         });
 
         socket.on('initialData', (data) => {
+            console.log('Received initial data:', data);
             updateUI(data);
         });
 
         socket.on('updateData', (data) => {
+            console.log('Received update data:', data);
             updateUI(data);
         });
     </script>

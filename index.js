@@ -18,7 +18,7 @@ app.post('/', (req, res) => {
     const eventData = req.body;
     const filePath = path.join(jsonFolder, `${eventData.READER_ID}.json`);
     fs.writeFileSync(filePath, JSON.stringify(eventData, null, 2));
-    io.emit('updateData', eventData);
+    io.to(eventData.READER_ID).emit('updateData', eventData);
     res.send('JSON received and saved');
 });
 
@@ -38,13 +38,25 @@ app.get('/:id', (req, res) => {
 
 io.on('connection', (socket) => {
     console.log('A user connected');
-    socket.on('requestData', (id) => {
+    
+    socket.on('join', (id) => {
+        socket.join(id);
+        console.log(`User joined room: ${id}`);
+        
         const filePath = path.join(jsonFolder, `${id}.json`);
         fs.readFile(filePath, 'utf8', (err, data) => {
             if (!err) {
-                socket.emit('initialData', JSON.parse(data));
+                const jsonData = JSON.parse(data);
+                console.log('Sending initial data:', jsonData);
+                socket.emit('initialData', jsonData);
+            } else {
+                console.error(`Error reading file ${id}.json:`, err);
             }
         });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
     });
 });
 
