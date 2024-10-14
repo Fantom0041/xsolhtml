@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors'); // Add this line
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
@@ -11,8 +12,19 @@ const xsolCrypt = new XSolCrypt(); // Create an instance of XSolCrypt
 
 console.log('XSolCrypt instance created');
 
+// Enable CORS for all routes
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST'], // Allow GET and POST methods
+    allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
+}));
+
 app.use(express.json());
 app.use(express.static('public'));
+
+
+app.options('/', cors()); // Enable pre-flight request for POST request
+
 
 const jsonFolder = path.join(__dirname, 'json');
 if (!fs.existsSync(jsonFolder)) {
@@ -30,11 +42,15 @@ function decodeImage(imagePath) {
         console.log('Decoding image...');
         const decodedImage = xsolCrypt.decode(encodedImage);
         console.log(`Decoded image length: ${decodedImage.length} characters`);
-        
+        console.log(`Decoded image starts with: ${decodedImage.slice(0, 20)}`);
         console.log('Converting decoded image to base64...');
         const base64Image = Buffer.from(decodedImage, 'binary').toString('base64');
         console.log(`Base64 image length: ${base64Image.length} characters`);
-        
+        if (decodedImage.startsWith('\xFF\xD8\xFF') || decodedImage.startsWith('\x89PNG')) {
+            console.log('Decoded data appears to be a valid image');
+        } else {
+            console.log('Warning: Decoded data does not appear to be a valid image');
+        }
         return base64Image;
     } catch (error) {
         console.error(`Error decoding image ${imagePath}:`, error);
@@ -42,7 +58,7 @@ function decodeImage(imagePath) {
     }
 }
 
-app.post('/', (req, res) => {
+app.post('/', cors(), (req, res) => {
     const eventData = req.body;
     console.log('Received JSON data:', JSON.stringify(eventData, null, 2));
 
@@ -107,7 +123,7 @@ io.on('connection', (socket) => {
 
                 console.log('All events processed. Sending initial data to client...');
                 socket.emit('initialData', jsonData);
-                console.log('Initial data sent to client');
+                // console.log('initialData sent to client ', jsonData);
             } else {
                 console.error(`Error reading file ${id}.json:`, err);
             }

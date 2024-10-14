@@ -35,7 +35,8 @@ function generateMockData() {
 // Function to send mock data to the main server
 function sendMockData() {
     const mockData = generateMockData();
-    axios.post('http://localhost:3000', mockData)
+    axios.post('https://xsolhtml.onrender.com:3000', mockData)
+    // axios.post('http://localhost:3000', mockData)
         .then(response => {
             console.log('Mock data sent successfully:', response.data);
         })
