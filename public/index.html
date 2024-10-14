@@ -99,7 +99,7 @@
         function renderEvents() {
             const eventsContainer = document.getElementById('events');
             eventsContainer.innerHTML = events.map((event, index) => `
-                <div class="event ${index === selectedEventIndex ? 'selected' : ''}" onclick="selectEvent(${index})">
+                <div class="event ${index === selectedEventIndex ? 'selected' : ''}" onclick="selectEvent(${index})" id="event-${index}">
                     <p><strong>ID:</strong> ${event.ID}</p>
                     <p><strong>Date:</strong> ${event.DATE}</p>
                     <p><strong>Ticket Name:</strong> ${event.TICKET_NAME}</p>
@@ -117,11 +117,21 @@
                     </div>
                 </div>
             `).join('');
+            
+            // Przewiń do zaznaczonego wydarzenia
+            scrollToSelectedEvent();
         }
 
         function selectEvent(index) {
             selectedEventIndex = index;
             renderEvents();
+        }
+
+        function scrollToSelectedEvent() {
+            const selectedEvent = document.getElementById(`event-${selectedEventIndex}`);
+            if (selectedEvent) {
+                selectedEvent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         function handleAction(action) {
@@ -154,7 +164,12 @@
 
         socket.on('updateData', (data) => {
             console.log('Received update data:', data);
+            const previousEventsCount = events.length;
             updateUI(data);
+            if (events.length > previousEventsCount) {
+                // Jeśli pojawiły się nowe wydarzenia, przewiń do zaznaczonego
+                scrollToSelectedEvent();
+            }
         });
     </script>
 </body>
