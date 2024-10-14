@@ -16,10 +16,19 @@ if (!fs.existsSync(jsonFolder)) {
 
 app.post('/', (req, res) => {
     const eventData = req.body;
+    console.log('Received JSON data:', JSON.stringify(eventData, null, 2));
+
     const filePath = path.join(jsonFolder, `${eventData.READER_ID}.json`);
+    console.log(`Saving data to file: ${filePath}`);
+
     fs.writeFileSync(filePath, JSON.stringify(eventData, null, 2));
+    console.log('Data saved successfully');
+
+    console.log(`Emitting updateData event to room: ${eventData.READER_ID}`);
     io.to(eventData.READER_ID).emit('updateData', eventData);
+
     res.send('JSON received and saved');
+    console.log('Response sent to client');
 });
 
 app.get('/:id', (req, res) => {
