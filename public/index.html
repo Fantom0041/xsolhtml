@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .events-list {
+            width: 100%;
+        }
+        .event {
+            cursor: pointer;
+            padding: 15px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .event.selected {
+            background-color: #e0e0e0;
+        }
+        .event p {
+            margin: 5px 0;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="events-list">
+            <h1>Events</h1>
+            <p><strong>Reader ID:</strong> <span id="readerId"></span></p>
+            <p><strong>Reader Name:</strong> <span id="readerName"></span></p>
+            <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+            <div id="events"></div>
+            <div class="actions">
+                <button onclick="handleAction('info')">Info</button>
+                <button onclick="handleAction('block')">Block Card</button>
+                <button onclick="handleAction('unblock')">Unblock Card</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let selectedEventIndex = 0;
+        let events = [];
+
+        function updateUI(data) {
+            document.getElementById('readerId').textContent = data.READER_ID;
+            document.getElementById('readerName').textContent = data.READER_NAME;
+            document.getElementById('timestamp').textContent = data.TIMESTAMP;
+            events = data.EVENTS;
+            renderEvents();
+        }
+
+        function renderEvents() {
+            const eventsContainer = document.getElementById('events');
+            eventsContainer.innerHTML = events.map((event, index) => `
+                <div class="event ${index === selectedEventIndex ? 'selected' : ''}" onclick="selectEvent(${index})">
+                    <p><strong>ID:</strong> ${event.ID}</p>
+                    <p><strong>Date:</strong> ${event.DATE}</p>
+                    <p><strong>Ticket Name:</strong> ${event.TICKET_NAME}</p>
+                    <p><strong>Ticket Type:</strong> ${event.TICKET_TYPE}</p>
+                    <p><strong>Color:</strong> ${event.COLOR}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectEvent(index) {
+            selectedEventIndex = index;
+            renderEvents();
+        }
+
+        function handleAction(action) {
+            const cardId = events[selectedEventIndex].ID;
+            fetch('/xsol-api-endpoint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action, cardId: cardId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.success) {
+                    alert('Action ' + action + ' performed successfully');
+                } else {
+                    alert('Action ' + action + ' failed');
+                }
+            });
+        }
+
+        socket.on('connect', () => {
+            const id = window.location.pathname.slice(1);
+            socket.emit('requestData', id);
+        });
+
+        socket.on('initialData', (data) => {
+            updateUI(data);
+        });
+
+        socket.on('updateData', (data) => {
+            updateUI(data);
+        });
+    </script>
+</body>
+</html>
