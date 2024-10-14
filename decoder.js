@@ -2,7 +2,7 @@ const crypto = require("crypto");
 
 class XSolCrypt {
   constructor() {
-    this.DEF_KEY = Buffer.from([
+    this.DEF_KEY = new Uint8Array([
       0xd5, 0xa8, 0x74, 0xcf, 0x88, 0xea, 0x9b, 0xb9, 0x49, 0x0b, 0xb3, 0xc0,
       0x78, 0xd4, 0x15, 0x6b, 0x24, 0xe8, 0x3f, 0x03, 0x63, 0x9f, 0x3b, 0xab,
       0x95, 0xa9, 0x9a, 0x79, 0x8f, 0x3b, 0xd6, 0xa1, 0xe0, 0x71, 0x63, 0xa9,
@@ -126,9 +126,8 @@ class XSolCrypt {
       0x01, 0x6c, 0x08, 0x3a, 0x1f, 0x17, 0xb5, 0x71, 0x21, 0xd5, 0x93, 0x3f,
       0x84,
     ]);
-    this.DEF_KEY_LEN = 1453;
 
-    this.CONST_KEY = Buffer.from([
+    this.CONST_KEY = new Uint8Array([
       0xc5, 0xf3, 0xa8, 0x0e, 0xa8, 0x1f, 0xea, 0x91, 0xa4, 0x73, 0x8b, 0xcb,
       0x7d, 0x8a, 0xd6, 0x35, 0x97, 0x9a, 0xe8, 0x95, 0x2f, 0x64, 0x47, 0xeb,
       0x34, 0x66, 0x83, 0xe4, 0x0a, 0x36, 0xb9, 0xe7, 0x57, 0x22, 0x29, 0xe9,
@@ -293,10 +292,12 @@ class XSolCrypt {
       0x05, 0xe9, 0xa8, 0xca, 0x37, 0xef, 0x4e, 0x82, 0x44, 0x6b, 0x44, 0x51,
       0x8d, 0xea, 0x87, 0x30, 0x28,
     ]);
+    this.DEF_KEY_LEN = 1453;
     this.CONST_KEY_LEN = 1949;
 
-    this.KEY_DEFAULT = this.DEF_KEY.toString("binary");
-    this.KEYS = [];
+    this.KEY_DEFAULT = Buffer.from(this.DEF_KEY).toString("binary");
+
+    this.KEYS = [this.KEY_DEFAULT];
   }
 
   addKey(k) {
@@ -324,12 +325,12 @@ class XSolCrypt {
   crc32(data) {
     let crc = 0xFFFFFFFF;
     for (let i = 0; i < data.length; i++) {
-      crc ^= data.charCodeAt(i);
+      crc ^= data[i];
       for (let j = 0; j < 8; j++) {
-        crc = (crc >>> 1) ^ ((crc & 1) ? 0xEDB88320 : 0);
+        crc = (crc & 1) ? (crc >>> 1) ^ 0xEDB88320 : crc >>> 1;
       }
     }
-    return ((crc ^ 0xFFFFFFFF) >>> 0).toString(16).padStart(8, '0');
+    return ~crc >>> 0;
   }
 
   encode(f) {
@@ -368,21 +369,25 @@ class XSolCrypt {
   }
 
   decode(f) {
-    if (f.length < 15 || f.substr(0, 11) !== "XCRYPT 1.00") {
+    const buffer = Buffer.from(f, 'binary');
+    if (buffer.length < 15 || buffer.toString('ascii', 0, 11) !== "XCRYPT 1.00") {
+      console.log('Input is not a valid XCRYPT file');
       return f;
     }
 
     let crc = 0;
-    crc += (f.charCodeAt(11) & 0xff) << 24;
-    crc += (f.charCodeAt(12) & 0xff) << 16;
-    crc += (f.charCodeAt(13) & 0xff) << 8;
-    crc += f.charCodeAt(14) & 0xff;
+    crc |= (buffer[11] & 0xff) << 24;
+    crc |= (buffer[12] & 0xff) << 16;
+    crc |= (buffer[13] & 0xff) << 8;
+    crc |= buffer[14] & 0xff;
+    console.log(`CRC from file: ${crc.toString(16)}`);
 
-    let ki = this.KEYS.length;
-    let nf = "";
+    let ki = this.KEYS.length - 1;
+    let nf = Buffer.alloc(buffer.length - 15);
 
     do {
       const key = this.getKey(ki);
+      console.log(`Trying key ${ki}: ${key.slice(0, 20)}...`);
 
       let keyi = ((crc >> 16) & 0xff00) | (crc & 0xff);
       while (keyi >= key.length) keyi >>= 1;
@@ -390,12 +395,8 @@ class XSolCrypt {
       let keyi2 = ((crc >> 24) & 0xff00) | ((crc >> 8) & 0xff);
       while (keyi2 >= this.CONST_KEY_LEN) keyi2 >>= 1;
 
-      nf = "";
-
-      for (let i = 15; i < f.length; i++) {
-        nf += String.fromCharCode(
-          f.charCodeAt(i) ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2]
-        );
+      for (let i = 15; i < buffer.length; i++) {
+        nf[i - 15] = buffer[i] ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2];
 
         keyi++;
         if (keyi >= key.length) keyi = 0;
@@ -404,14 +405,20 @@ class XSolCrypt {
         if (keyi2 >= this.CONST_KEY_LEN) keyi2 = 0;
       }
 
-      if (parseInt(this.crc32(nf), 16) === crc) {
+      const calculatedCrc = this.crc32(nf);
+      console.log(`Calculated CRC: ${calculatedCrc.toString(16)}`);
+
+      if (calculatedCrc === crc) {
+        console.log('CRC match found!');
         return nf;
       } else {
+        console.log('CRC mismatch, trying next key');
         ki--;
       }
     } while (ki >= 0);
 
-    return f;
+    console.log('No valid decryption found, returning original data');
+    return buffer.slice(15);  // Return the original data without the header
   }
 }
 
