@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
 const xsolApp = express();
 const xsolPort = 4000;
@@ -35,15 +36,35 @@ function generateMockData() {
 // Function to send mock data to the main server
 function sendMockData() {
     const mockData = generateMockData();
-    axios.post('https://xsolhtml.onrender.com:3000', mockData)
-    // axios.post('http://localhost:3000', mockData)
+
+    const proxyConfig = {
+        protocol: 'http',
+        host: '172.16.2.254',  // Remove 'http://' from here
+        port: 3128,  
+    };
+    
+    // Create a proxy agent
+    const httpsAgent = new HttpsProxyAgent(`${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`);
+    const axiosConfig = {
+        httpsAgent,
+        proxy: false  // This is important to prevent axios from using the system proxy
+    };
+    
+    axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
         .then(response => {
             console.log('Mock data sent successfully:', response.data);
         })
         .catch(error => {
             console.error('Error sending mock data:', error.message);
+            if (error.response) {
+                console.error('Response status:', error.response.status);
+                console.error('Response data:', error.response.data);
+            } else if (error.request) {
+                console.error('No response received');
+            }
         });
-}
+};
+
 
 // Send mock data when the server starts
 sendMockData();

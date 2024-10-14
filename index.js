@@ -93,6 +93,10 @@ io.on('connection', (socket) => {
     console.log('A user connected');
     
     socket.on('join', (id) => {
+        if (!id) {
+            console.error('Received empty ID in join event');
+            return;
+        }
         socket.join(id);
         console.log(`User joined room: ${id}`);
         
