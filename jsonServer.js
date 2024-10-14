@@ -25,7 +25,8 @@ function generateMockData() {
             DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
             TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
             TICKET_TYPE: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
-            PHOTO_ORG: '/photoorg.png',
+            PHOTO_ORG: '/photos/org1.png',
+            PHOTO_CUR: '/photos/cur1.png',
             COLOR: colors[Math.floor(Math.random() * colors.length)]
         }))
     };
