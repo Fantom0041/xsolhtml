@@ -131,7 +131,15 @@
         function scrollToSelectedEvent() {
             const selectedEvent = document.getElementById(`event-${selectedEventIndex}`);
             if (selectedEvent) {
-                selectedEvent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const windowHeight = window.innerHeight;
+                const eventRect = selectedEvent.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const targetScrollTop = scrollTop + eventRect.top - (windowHeight / 2) + (eventRect.height / 2);
+                
+                window.scrollTo({
+                    top: targetScrollTop,
+                    behavior: 'smooth'
+                });
             }
         }
 
