@@ -108,11 +108,11 @@
                     <div class="event-photos">
                         <div class="event-photo">
                             <p><strong>Original Photo:</strong></p>
-                            <img src="${event.PHOTO_ORG}" alt="Original Photo">
+                            ${event.PHOTO_ORG ? `<img src="data:image/jpeg;base64,${event.PHOTO_ORG}" alt="Original Photo">` : 'No photo available'}
                         </div>
                         <div class="event-photo">
                             <p><strong>Current Photo:</strong></p>
-                            <img src="${event.PHOTO_CUR}" alt="Current Photo">
+                            ${event.PHOTO_CUR ? `<img src="data:image/jpeg;base64,${event.PHOTO_CUR}" alt="Current Photo">` : 'No photo available'}
                         </div>
                     </div>
                 </div>
