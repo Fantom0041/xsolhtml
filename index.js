@@ -1,5 +1,5 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const cors = require('cors');
 const app = express();
@@ -25,16 +25,15 @@ app.use(express.static('public'));
 app.options('/', cors());
 
 const jsonFolder = path.join(__dirname, 'json');
-if (!fs.existsSync(jsonFolder)) {
-    fs.mkdirSync(jsonFolder);
-    console.log(`Created JSON folder: ${jsonFolder}`);
-}
+fs.mkdir(jsonFolder, { recursive: true })
+    .then(() => console.log(`Created JSON folder: ${jsonFolder}`))
+    .catch(err => console.error(`Error creating JSON folder: ${err}`));
 
-function decodeImage(imagePath) {
+async function decodeImage(imagePath) {
     console.log(`Attempting to decode image: ${imagePath}`);
     try {
         console.log('Reading encoded image file...');
-        const encodedImageBuffer = fs.readFileSync(imagePath);
+        const encodedImageBuffer = await fs.readFile(imagePath);
         console.log(`Encoded image size: ${encodedImageBuffer.length} bytes`);
         
         console.log('Decoding image using C++ addon...');
@@ -60,41 +59,46 @@ function decodeImage(imagePath) {
     }
 }
 
-app.post('/', cors(), (req, res) => {
+app.post('/', cors(), async (req, res) => {
     const eventData = req.body;
     console.log('Received JSON data:', JSON.stringify(eventData, null, 2));
 
     const filePath = path.join(jsonFolder, `${eventData.READER_ID}.json`);
     console.log(`Saving data to file: ${filePath}`);
 
-    fs.writeFileSync(filePath, JSON.stringify(eventData, null, 2));
-    console.log('Data saved successfully');
+    try {
+        await fs.writeFile(filePath, JSON.stringify(eventData, null, 2));
+        console.log('Data saved successfully');
 
-    console.log(`Emitting updateData event to room: ${eventData.READER_ID}`);
-    io.to(eventData.READER_ID).emit('updateData', eventData);
+        console.log(`Emitting updateData event to room: ${eventData.READER_ID}`);
+        io.to(eventData.READER_ID).emit('updateData', eventData);
 
-    res.send('JSON received and saved');
-    console.log('Response sent to client');
+        res.send('JSON received and saved');
+        console.log('Response sent to client');
+    } catch (error) {
+        console.error('Error saving data:', error);
+        res.status(500).send('Error saving data');
+    }
 });
 
-app.get('/:id', (req, res) => {
+app.get('/:id', async (req, res) => {
     const filePath = path.join(jsonFolder, `${req.params.id}.json`);
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            if (err.code === 'ENOENT') {
-                return res.status(404).send('JSON file not found');
-            } else {
-                return res.status(500).send('Error reading JSON file');
-            }
-        }
+    try {
+        await fs.access(filePath);
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    });
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            res.status(404).send('JSON file not found');
+        } else {
+            res.status(500).send('Error reading JSON file');
+        }
+    }
 });
 
 io.on('connection', (socket) => {
     console.log('A user connected');
     
-    socket.on('join', (id) => {
+    socket.on('join', async (id) => {
         if (!id) {
             console.error('Received empty ID in join event');
             return;
@@ -104,35 +108,36 @@ io.on('connection', (socket) => {
         
         const filePath = path.join(jsonFolder, `${id}.json`);
         console.log(`Reading JSON file: ${filePath}`);
-        fs.readFile(filePath, 'utf8', (err, data) => {
-            if (!err) {
-                console.log('JSON file read successfully');
-                const jsonData = JSON.parse(data);
-                console.log(`Parsed JSON data. Events count: ${jsonData.EVENTS.length}`);
-                
-                // Decode images for each event
-                console.log('Starting to decode images for events...');
-                jsonData.EVENTS = jsonData.EVENTS.map((event, index) => {
-                    console.log(`Processing event ${index + 1}/${jsonData.EVENTS.length}`);
-                    if (event.ORG_PHOTO_PATH) {
-                        console.log(`Decoding original photo: ${event.ORG_PHOTO_PATH}`);
-                        event.PHOTO_ORG = decodeImage(event.ORG_PHOTO_PATH);
-                        console.log(`Original photo decoded: ${event.PHOTO_ORG ? 'success' : 'failed'}`);
-                    }
-                    if (event.CUR_PHOTO_PATH) {
-                        console.log(`Decoding current photo: ${event.CUR_PHOTO_PATH}`);
-                        event.PHOTO_CUR = decodeImage(event.CUR_PHOTO_PATH);
-                        console.log(`Current photo decoded: ${event.PHOTO_CUR ? 'success' : 'failed'}`);
-                    }
-                    return event;
-                });
+        try {
+            const data = await fs.readFile(filePath, 'utf8');
+            console.log('JSON file read successfully');
+            const jsonData = JSON.parse(data);
+            console.log(`Parsed JSON data. Events count: ${jsonData.EVENTS.length}`);
+            
+            // Decode images for each event
+            console.log('Starting to decode images for events...');
+            const decodedEvents = await Promise.all(jsonData.EVENTS.map(async (event, index) => {
+                console.log(`Processing event ${index + 1}/${jsonData.EVENTS.length}`);
+                if (event.ORG_PHOTO_PATH) {
+                    console.log(`Decoding original photo: ${event.ORG_PHOTO_PATH}`);
+                    event.PHOTO_ORG = await decodeImage(event.ORG_PHOTO_PATH);
+                    console.log(`Original photo decoded: ${event.PHOTO_ORG ? 'success' : 'failed'}`);
+                }
+                if (event.CUR_PHOTO_PATH) {
+                    console.log(`Decoding current photo: ${event.CUR_PHOTO_PATH}`);
+                    event.PHOTO_CUR = await decodeImage(event.CUR_PHOTO_PATH);
+                    console.log(`Current photo decoded: ${event.PHOTO_CUR ? 'success' : 'failed'}`);
+                }
+                return event;
+            }));
 
-                console.log('All events processed. Sending initial data to client...');
-                socket.emit('initialData', jsonData);
-            } else {
-                console.error(`Error reading file ${id}.json:`, err);
-            }
-        });
+            jsonData.EVENTS = decodedEvents;
+            console.log('All events processed. Sending initial data to client...');
+            console.log('Sending data to client:', JSON.stringify(jsonData, null, 2));
+            socket.emit('initialData', jsonData);
+        } catch (err) {
+            console.error(`Error reading file ${id}.json:`, err);
+        }
     });
 
     socket.on('disconnect', () => {

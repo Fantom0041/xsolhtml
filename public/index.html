@@ -89,34 +89,39 @@
         let events = [];
 
         function updateUI(data) {
+            console.log('Updating UI with data:', JSON.stringify(data, null, 2));
             document.getElementById('readerId').textContent = data.READER_ID;
             document.getElementById('readerName').textContent = data.READER_NAME;
             document.getElementById('timestamp').textContent = data.TIMESTAMP;
             events = data.EVENTS;
+            console.log('Events:', JSON.stringify(events, null, 2));
             renderEvents();
         }
 
         function renderEvents() {
             const eventsContainer = document.getElementById('events');
-            eventsContainer.innerHTML = events.map((event, index) => `
-                <div class="event ${index === selectedEventIndex ? 'selected' : ''}" onclick="selectEvent(${index})">
-                    <p><strong>ID:</strong> ${event.ID}</p>
-                    <p><strong>Date:</strong> ${event.DATE}</p>
-                    <p><strong>Ticket Name:</strong> ${event.TICKET_NAME}</p>
-                    <p><strong>Ticket Type:</strong> ${event.TICKET_TYPE}</p>
-                    <p><strong>Color:</strong> ${event.COLOR}</p>
-                    <div class="event-photos">
-                        <div class="event-photo">
-                            <p><strong>Original Photo:</strong></p>
-                            ${event.PHOTO_ORG ? `<img src="data:image/jpeg;base64,${event.PHOTO_ORG}" alt="Original Photo">` : 'No photo available'}
-                        </div>
-                        <div class="event-photo">
-                            <p><strong>Current Photo:</strong></p>
-                            ${event.PHOTO_CUR ? `<img src="data:image/jpeg;base64,${event.PHOTO_CUR}" alt="Current Photo">` : 'No photo available'}
+            eventsContainer.innerHTML = events.map((event, index) => {
+                console.log(`Rendering event ${index}:`, JSON.stringify(event, null, 2));
+                return `
+                    <div class="event ${index === selectedEventIndex ? 'selected' : ''}" onclick="selectEvent(${index})">
+                        <p><strong>ID:</strong> ${event.ID}</p>
+                        <p><strong>Date:</strong> ${event.DATE}</p>
+                        <p><strong>Ticket Name:</strong> ${event.TICKET_NAME}</p>
+                        <p><strong>Ticket Type:</strong> ${event.TICKET_TYPE}</p>
+                        <p><strong>Color:</strong> ${event.COLOR}</p>
+                        <div class="event-photos">
+                            <div class="event-photo">
+                                <p><strong>Original Photo:</strong></p>
+                                ${event.PHOTO_ORG ? `<img src="data:image/jpeg;base64,${event.PHOTO_ORG}" alt="Original Photo">` : 'No photo available'}
+                            </div>
+                            <div class="event-photo">
+                                <p><strong>Current Photo:</strong></p>
+                                ${event.PHOTO_CUR ? `<img src="data:image/jpeg;base64,${event.PHOTO_CUR}" alt="Current Photo">` : 'No photo available'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function selectEvent(index) {
