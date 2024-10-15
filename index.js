@@ -1,30 +1,28 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // Add this line
+const cors = require('cors');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const port = 3000;
-const XSolCrypt = require('./decoder'); // Import the XSolCrypt class
 
-const xsolCrypt = new XSolCrypt(); // Create an instance of XSolCrypt
+// Import the C++ addon
+const xsolcrypt = require('./xsolcrypt-addon/build/Release/xsolcrypt.node');
 
-console.log('XSolCrypt instance created');
+console.log('XSolCrypt addon loaded');
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET', 'POST'], // Allow GET and POST methods
-    allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
+    origin: '*',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.static('public'));
 
-
-app.options('/', cors()); // Enable pre-flight request for POST request
-
+app.options('/', cors());
 
 const jsonFolder = path.join(__dirname, 'json');
 if (!fs.existsSync(jsonFolder)) {
@@ -36,21 +34,25 @@ function decodeImage(imagePath) {
     console.log(`Attempting to decode image: ${imagePath}`);
     try {
         console.log('Reading encoded image file...');
-        const encodedImage = fs.readFileSync(imagePath, 'utf8');
-        console.log(`Encoded image length: ${encodedImage.length} characters`);
+        const encodedImageBuffer = fs.readFileSync(imagePath);
+        console.log(`Encoded image size: ${encodedImageBuffer.length} bytes`);
         
-        console.log('Decoding image...');
-        const decodedImage = xsolCrypt.decode(encodedImage);
-        console.log(`Decoded image length: ${decodedImage.length} characters`);
-        console.log(`Decoded image starts with: ${decodedImage.slice(0, 20)}`);
+        console.log('Decoding image using C++ addon...');
+        const decodedBuffer = xsolcrypt.decode(encodedImageBuffer);
+        console.log(`Decoded image size: ${decodedBuffer.length} bytes`);
+        
         console.log('Converting decoded image to base64...');
-        const base64Image = Buffer.from(decodedImage, 'binary').toString('base64');
+        const base64Image = decodedBuffer.toString('base64');
         console.log(`Base64 image length: ${base64Image.length} characters`);
-        if (decodedImage.startsWith('\xFF\xD8\xFF') || decodedImage.startsWith('\x89PNG')) {
-            console.log('Decoded data appears to be a valid image');
+        
+        if (decodedBuffer[0] === 0xFF && decodedBuffer[1] === 0xD8 && decodedBuffer[2] === 0xFF) {
+            console.log('Decoded data appears to be a valid JPEG image');
+        } else if (decodedBuffer[0] === 0x89 && decodedBuffer[1] === 0x50 && decodedBuffer[2] === 0x4E && decodedBuffer[3] === 0x47) {
+            console.log('Decoded data appears to be a valid PNG image');
         } else {
             console.log('Warning: Decoded data does not appear to be a valid image');
         }
+        
         return base64Image;
     } catch (error) {
         console.error(`Error decoding image ${imagePath}:`, error);
@@ -127,7 +129,6 @@ io.on('connection', (socket) => {
 
                 console.log('All events processed. Sending initial data to client...');
                 socket.emit('initialData', jsonData);
-                // console.log('initialData sent to client ', jsonData);
             } else {
                 console.error(`Error reading file ${id}.json:`, err);
             }

@@ -51,7 +51,7 @@ function sendMockData() {
     };
     
     // axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
-      axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
+      axios.post('http://localhost:3000/', mockData, axiosConfig)
         .then(response => {
             console.log('Mock data sent successfully:', response.data);
         })
