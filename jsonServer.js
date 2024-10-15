@@ -85,10 +85,10 @@ function checkMainServer(retries = 5, delay = 2000) {
 }
 
 // Send mock data when the server starts
-// sendMockData();
+sendMockData();
 
 
-// setInterval(sendMockData, 2000);
+setInterval(sendMockData, 2000);
 
 xsolApp.post('/xsol-api-endpoint', (req, res) => {
     console.log("Xsol server received:", req.body);
@@ -97,7 +97,7 @@ xsolApp.post('/xsol-api-endpoint', (req, res) => {
 
 xsolApp.listen(xsolPort, () => {
     console.log(`Mock Xsol server listening on port ${xsolPort}`);
-    checkMainServer();  // Start checking for the main server
+    // checkMainServer();  // Start checking for the main server
 });
 
 // Uncomment these lines if you want to periodically send mock data
