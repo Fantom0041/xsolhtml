@@ -94,7 +94,9 @@
             document.getElementById('readerName').textContent = data.READER_NAME;
             document.getElementById('timestamp').textContent = data.TIMESTAMP;
             events = data.EVENTS;
-            console.log('Events:', JSON.stringify(events, null, 2));
+            if (selectedEventIndex === null || selectedEventIndex >= events.length) {
+                selectedEventIndex = 0;
+            }
             renderEvents();
         }
 
@@ -127,6 +129,13 @@
         function selectEvent(index) {
             selectedEventIndex = index;
             renderEvents();
+        }
+
+        function scrollToSelectedEvent() {
+            const selectedEvent = document.getElementById(`event-${selectedEventIndex}`);
+            if (selectedEvent) {
+                selectedEvent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         function handleAction(action) {
@@ -164,6 +173,10 @@
             const data = JSON.parse(dataString);
             console.log('Parsed update data:', data);
             updateUI(data);
+            if (events.length > previousEventsCount) {
+                // Jeśli pojawiły się nowe wydarzenia, przewiń do zaznaczonego
+                scrollToSelectedEvent();
+            }
         });
     </script>
 </body>

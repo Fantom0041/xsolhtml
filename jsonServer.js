@@ -36,6 +36,8 @@ function generateMockData() {
 // Function to send mock data to the main server
 function sendMockData() {
     const mockData = generateMockData();
+    axios.post('https://xsolhtml.onrender.com', mockData)
+    // axios.post('http://172.16.2.150:3000', mockData)
 
     const proxyConfig = {
         protocol: 'http',
@@ -70,7 +72,7 @@ function sendMockData() {
 // Send mock data when the server starts
 sendMockData();
 
-// Optionally, send new mock data every 30 seconds
+
 setInterval(sendMockData, 2000);
 
 xsolApp.post('/xsol-api-endpoint', (req, res) => {
