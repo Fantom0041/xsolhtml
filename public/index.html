@@ -51,6 +51,7 @@
             width: 100%;
             height: auto;
             border-radius: 5px;
+            cursor: pointer; /* Dodane: zmiana kursora na pointer */
         }
         .events-list {
             width: 100%;
@@ -63,14 +64,15 @@
             margin-bottom: 8px;
             border-radius: 5px;
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 40px;
+            min-height: 50px;
+            background-color: white;
+            z-index: 1;
         }
         .event.selected {
-            box-shadow: 0 0 0 4px orange;
+            box-shadow: 0 0 0 2px orange;
         }
         .event-left, .event-right {
             display: flex;
@@ -78,45 +80,44 @@
             justify-content: center;
             height: 100%;
         }
+        .event-left {
+            flex: 1;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+        }
         .event-right {
-            margin-right: 30px;
             text-align: right;
+            margin-right: 40px;
         }
         .event-info p {
             margin: 0;
             font-size: 14px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            line-height: 1.1;
+            line-height: 1.2;
         }
-        .event-left p:first-child,
-        .event-right p:first-child {
+        .event-left p {
             font-weight: bold;
-            margin-bottom: 2px;
         }
-        .event-left p:last-child,
-        .event-right p:last-child {
+        .event-right p {
             font-size: 12px;
-        }
-        .small-text {
-            font-size: 12px;
-
         }
         .event-actions {
             position: absolute;
             top: 50%;
             right: 5px;
             transform: translateY(-50%);
+            z-index: 2;
         }
         .event-actions-toggle {
             background: none;
             border: none;
-            color: white;
+            color: #333;
             font-size: 18px;
             cursor: pointer;
-            padding: 0;
+            padding: 5px;
             line-height: 1;
         }
-        .event-actions-menu {
+         .event-actions-menu {
             display: none;
             position: absolute;
             right: 0;
@@ -127,6 +128,7 @@
             padding: 5px;
             z-index: 10;
             box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            min-width: 150px; /* Zwiększona szerokość menu */
         }
         .event-actions-menu button {
             display: block;
@@ -134,16 +136,16 @@
             text-align: left;
             padding: 5px 10px;
             margin: 2px 0;
-            background: #007bff;
+            background: #f0f0f0;
             border: none;
-            color: white;
+            color: #333;
             cursor: pointer;
             border-radius: 3px;
+            white-space: nowrap; /* Zapobiega zawijaniu tekstu */
         }
         .event-actions-menu button:hover {
-            background-color: #0056b3;
+            background-color: #e0e0e0;
         }
-
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -174,24 +176,20 @@
 
             .event {
                 padding: 8px 40px 8px 10px;
-                height: auto;
-                min-height: 40px;
             }
 
-            .event-left, .event-right {
-                flex: 1;
-                min-width: 0;
-            }
-
-            .event-left p, .event-right p {
-                white-space: nowrap;
+            .event-left p {
+                max-width: calc(100% - 50px);
                 overflow: hidden;
                 text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                word-wrap: break-word;
             }
 
             .event-right {
-                text-align: right;
-                margin-right: 0;
+                margin-right: 30px;
             }
 
             .event-actions {
@@ -212,7 +210,7 @@
                 right: 0;
                 top: 100%;
                 width: auto;
-                min-width: 120px;
+                min-width: 150px; /* Zwiększona szerokość menu dla urządzeń mobilnych */
             }
 
             .event-actions-menu button {
@@ -234,29 +232,71 @@
                 object-fit: cover;
             }
         }
+
+        .modal {
+            display: none; /* Upewnijmy się, że modal jest domyślnie ukryty */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            display: block;
+            max-width: 90%;
+            max-height: 90vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="reader-info">
-            <h2>Informacje o czytniku</h2>
             <p>
-                <span><strong>ID:</strong> <span id="readerId"></span></span>
-                <span><strong>Nazwa:</strong> <span id="readerName"></span></span>
-                <span><strong>Czas:</strong> <span id="timestamp"></span></span>
+                <span id="readerName"></span>
             </p>
         </div>
         <div class="photo-container">
             <div class="photo">
-                <p><strong>Oryginalne zdjęcie:</strong></p>
-                <img id="originalPhoto" src="" alt="Oryginalne zdjęcie">
+                <p><strong>Pierwsze:</strong></p>
+                <img id="originalPhoto" src="" alt="Oryginalne zdjęcie" onclick="openModal(this.src)">
             </div>
             <div class="photo">
-                <p><strong>Aktualne zdjęcie:</strong></p>
-                <img id="currentPhoto" src="" alt="Aktualne zdjęcie">
+                <p><strong>Aktualne:</strong></p>
+                <img id="currentPhoto" src="" alt="Aktualne zdjęcie" onclick="openModal(this.src)">
             </div>
         </div>
         <div class="events-list" id="events"></div>
+    </div>
+
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
     </div>
 
     <script>
@@ -265,10 +305,8 @@
         let events = [];
 
         function updateUI(data) {
-            console.log('Updating UI with data:', JSON.stringify(data, null, 2));
-            document.getElementById('readerId').textContent = data.READER_ID;
+            console.log('Aktualizacja interfejsu użytkownika z danymi:', JSON.stringify(data, null, 2));
             document.getElementById('readerName').textContent = data.READER_NAME;
-            document.getElementById('timestamp').textContent = data.TIMESTAMP;
             events = data.EVENTS;
             if (selectedEventIndex === null || selectedEventIndex >= events.length) {
                 selectedEventIndex = 0;
@@ -280,19 +318,15 @@
         function renderEvents() {
             const eventsContainer = document.getElementById('events');
             eventsContainer.innerHTML = events.map((event, index) => {
-                console.log(`Rendering event ${index}:`, JSON.stringify(event, null, 2));
-                const backgroundColor = `#${event.COLOR.toString(16).padStart(6, '0')}`;
                 return `
                     <div id="event-${index}" class="event ${index === selectedEventIndex ? 'selected' : ''}" 
-                         onclick="selectEvent(${index})"
-                         style="background-color: ${backgroundColor};">
+                         onclick="selectEvent(${index})">
                         <div class="event-left">
                             <p>${event.TICKET_NAME}</p>
-                            <p class="small-text">Typ biletu: ${event.TICKET_TYPE}</p>
                         </div>
                         <div class="event-right">
                             <p>${event.DATE}</p>
-                            <p class="small-text">ID: ${event.ID}</p>
+                            <p>ID: ${event.ID}</p>
                         </div>
                         <div class="event-actions">
                             <button class="event-actions-toggle" onclick="toggleEventActions(event, ${index})">⋮</button>
@@ -351,7 +385,17 @@
         function toggleEventActions(event, index) {
             event.stopPropagation();
             const actionsMenu = document.getElementById(`event-actions-${index}`);
-            actionsMenu.style.display = actionsMenu.style.display === 'block' ? 'none' : 'block';
+            
+            if (actionsMenu.style.display === 'block') {
+                actionsMenu.style.display = 'none';
+            } else {
+                // Zamknij wszystkie otwarte menu
+                document.querySelectorAll('.event-actions-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+                
+                actionsMenu.style.display = 'block';
+            }
         }
 
         // Dodaj nasłuchiwanie kliknięć poza menu akcji, aby je zamknąć
@@ -382,6 +426,47 @@
             console.log('Parsed update data:', data);
             updateUI(data);
         });
+
+        // Dodajmy funkcję, która będzie wywoływana przy ładowaniu strony
+        window.onload = function() {
+            closeModal(); // Zamknij modal przy ładowaniu strony
+        };
+
+        function openModal(imgSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "flex";
+            modalImg.src = imgSrc;
+            
+            // Ustawienie oryginalnego rozmiaru zdjęcia
+            modalImg.onload = function() {
+                const imgWidth = this.naturalWidth;
+                const imgHeight = this.naturalHeight;
+                const maxWidth = window.innerWidth * 0.9;
+                const maxHeight = window.innerHeight * 0.9;
+                
+                if (imgWidth > maxWidth || imgHeight > maxHeight) {
+                    const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+                    this.style.width = `${imgWidth * ratio}px`;
+                    this.style.height = `${imgHeight * ratio}px`;
+                } else {
+                    this.style.width = `${imgWidth}px`;
+                    this.style.height = `${imgHeight}px`;
+                }
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+
+        // Zamykanie modalu po kliknięciu poza obrazem
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
     </script>
 </body>
 </html>
