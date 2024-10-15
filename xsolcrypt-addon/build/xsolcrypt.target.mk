@@ -8,44 +8,50 @@ DEFS_Debug := \
 	'-DUSING_V8_SHARED=1' \
 	'-DV8_DEPRECATION_WARNINGS=1' \
 	'-D_GLIBCXX_USE_CXX11_ABI=1' \
+	'-D_DARWIN_USE_64_BIT_INODE=1' \
 	'-D_LARGEFILE_SOURCE' \
 	'-D_FILE_OFFSET_BITS=64' \
-	'-D__STDC_FORMAT_MACROS' \
-	'-DOPENSSL_NO_PINSHARED' \
-	'-DOPENSSL_THREADS' \
 	'-DBUILDING_NODE_EXTENSION' \
 	'-DDEBUG' \
 	'-D_DEBUG'
 
 # Flags passed to all source files.
 CFLAGS_Debug := \
-	-fPIC \
-	-pthread \
+	-O0 \
+	-gdwarf-2 \
+	-fno-strict-aliasing \
+	-mmacosx-version-min=10.7 \
+	-arch \
+	x86_64 \
 	-Wall \
-	-Wextra \
-	-Wno-unused-parameter \
-	-m64 \
-	-g \
-	-O0
+	-Wendif-labels \
+	-W \
+	-Wno-unused-parameter
 
 # Flags passed to only C files.
 CFLAGS_C_Debug :=
 
 # Flags passed to only C++ files.
 CFLAGS_CC_Debug := \
-	-fno-rtti \
 	-std=gnu++17 \
-	-std=c++11
+	-stdlib=libc++ \
+	-fno-rtti
+
+# Flags passed to only ObjC files.
+CFLAGS_OBJC_Debug :=
+
+# Flags passed to only ObjC++ files.
+CFLAGS_OBJCC_Debug :=
 
 INCS_Debug := \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/include/node \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/src \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/openssl/config \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/openssl/openssl/include \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/uv/include \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/zlib \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/v8/include \
-	-I/home/kasjer/Downloads/projects/xsolserv/node_modules/node-addon-api
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/include/node \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/src \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/openssl/config \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/openssl/openssl/include \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/uv/include \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/zlib \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/v8/include \
+	-I/Users/filipsygiet/Desktop/Praca/xsolhtml/node_modules/node-addon-api
 
 DEFS_Release := \
 	'-DNODE_GYP_MODULE_NAME=xsolcrypt' \
@@ -53,42 +59,49 @@ DEFS_Release := \
 	'-DUSING_V8_SHARED=1' \
 	'-DV8_DEPRECATION_WARNINGS=1' \
 	'-D_GLIBCXX_USE_CXX11_ABI=1' \
+	'-D_DARWIN_USE_64_BIT_INODE=1' \
 	'-D_LARGEFILE_SOURCE' \
 	'-D_FILE_OFFSET_BITS=64' \
-	'-D__STDC_FORMAT_MACROS' \
-	'-DOPENSSL_NO_PINSHARED' \
-	'-DOPENSSL_THREADS' \
 	'-DBUILDING_NODE_EXTENSION'
 
 # Flags passed to all source files.
 CFLAGS_Release := \
-	-fPIC \
-	-pthread \
-	-Wall \
-	-Wextra \
-	-Wno-unused-parameter \
-	-m64 \
 	-O3 \
-	-fno-omit-frame-pointer
+	-gdwarf-2 \
+	-fno-strict-aliasing \
+	-flto \
+	-mmacosx-version-min=10.7 \
+	-arch \
+	x86_64 \
+	-Wall \
+	-Wendif-labels \
+	-W \
+	-Wno-unused-parameter
 
 # Flags passed to only C files.
 CFLAGS_C_Release :=
 
 # Flags passed to only C++ files.
 CFLAGS_CC_Release := \
-	-fno-rtti \
 	-std=gnu++17 \
-	-std=c++11
+	-stdlib=libc++ \
+	-fno-rtti
+
+# Flags passed to only ObjC files.
+CFLAGS_OBJC_Release :=
+
+# Flags passed to only ObjC++ files.
+CFLAGS_OBJCC_Release :=
 
 INCS_Release := \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/include/node \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/src \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/openssl/config \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/openssl/openssl/include \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/uv/include \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/zlib \
-	-I/home/kasjer/.cache/node-gyp/21.7.3/deps/v8/include \
-	-I/home/kasjer/Downloads/projects/xsolserv/node_modules/node-addon-api
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/include/node \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/src \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/openssl/config \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/openssl/openssl/include \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/uv/include \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/zlib \
+	-I/Users/filipsygiet/Library/Caches/node-gyp/22.8.0/deps/v8/include \
+	-I/Users/filipsygiet/Desktop/Praca/xsolhtml/node_modules/node-addon-api
 
 OBJS := \
 	$(obj).target/$(TARGET)/xsolcrypt_wrapper.o \
@@ -99,13 +112,15 @@ OBJS := \
 all_deps += $(OBJS)
 
 # Make sure our dependencies are built before any of us.
-$(OBJS): | $(builddir)/nothing.a $(obj).target/../node_modules/node-addon-api/nothing.a
+$(OBJS): | $(builddir)/nothing.a
 
 # CFLAGS et al overrides must be target-local.
 # See "Target-specific Variable Values" in the GNU Make manual.
 $(OBJS): TOOLSET := $(TOOLSET)
 $(OBJS): GYP_CFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_C_$(BUILDTYPE))
 $(OBJS): GYP_CXXFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_CC_$(BUILDTYPE))
+$(OBJS): GYP_OBJCFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_C_$(BUILDTYPE)) $(CFLAGS_OBJC_$(BUILDTYPE))
+$(OBJS): GYP_OBJCXXFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_CC_$(BUILDTYPE)) $(CFLAGS_OBJCC_$(BUILDTYPE))
 
 # Suffix rules, putting all outputs into $(obj).
 
@@ -123,38 +138,49 @@ $(obj).$(TOOLSET)/$(TARGET)/%.o: $(obj)/%.cpp FORCE_DO_CMD
 # End of this set of suffix rules
 ### Rules for final target.
 LDFLAGS_Debug := \
-	-pthread \
-	-rdynamic \
-	-m64
+	-undefined dynamic_lookup \
+	-Wl,-search_paths_first \
+	-mmacosx-version-min=10.7 \
+	-arch \
+	x86_64 \
+	-L$(builddir) \
+	-stdlib=libc++
+
+LIBTOOLFLAGS_Debug := \
+	-undefined dynamic_lookup \
+	-Wl,-search_paths_first
 
 LDFLAGS_Release := \
-	-pthread \
-	-rdynamic \
-	-m64
+	-undefined dynamic_lookup \
+	-Wl,-search_paths_first \
+	-mmacosx-version-min=10.7 \
+	-arch \
+	x86_64 \
+	-L$(builddir) \
+	-stdlib=libc++
+
+LIBTOOLFLAGS_Release := \
+	-undefined dynamic_lookup \
+	-Wl,-search_paths_first
 
 LIBS := \
 	-lstdc++
 
-$(obj).target/xsolcrypt.node: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
-$(obj).target/xsolcrypt.node: LIBS := $(LIBS)
-$(obj).target/xsolcrypt.node: TOOLSET := $(TOOLSET)
-$(obj).target/xsolcrypt.node: $(OBJS) $(obj).target/../node_modules/node-addon-api/nothing.a FORCE_DO_CMD
+$(builddir)/xsolcrypt.node: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
+$(builddir)/xsolcrypt.node: LIBS := $(LIBS)
+$(builddir)/xsolcrypt.node: GYP_LIBTOOLFLAGS := $(LIBTOOLFLAGS_$(BUILDTYPE))
+$(builddir)/xsolcrypt.node: TOOLSET := $(TOOLSET)
+$(builddir)/xsolcrypt.node: $(OBJS) $(builddir)/nothing.a FORCE_DO_CMD
 	$(call do_cmd,solink_module)
 
-all_deps += $(obj).target/xsolcrypt.node
+all_deps += $(builddir)/xsolcrypt.node
 # Add target alias
 .PHONY: xsolcrypt
 xsolcrypt: $(builddir)/xsolcrypt.node
 
-# Copy this to the executable output path.
-$(builddir)/xsolcrypt.node: TOOLSET := $(TOOLSET)
-$(builddir)/xsolcrypt.node: $(obj).target/xsolcrypt.node FORCE_DO_CMD
-	$(call do_cmd,copy)
-
-all_deps += $(builddir)/xsolcrypt.node
 # Short alias for building this executable.
 .PHONY: xsolcrypt.node
-xsolcrypt.node: $(obj).target/xsolcrypt.node $(builddir)/xsolcrypt.node
+xsolcrypt.node: $(builddir)/xsolcrypt.node
 
 # Add executable to "all" target.
 .PHONY: all

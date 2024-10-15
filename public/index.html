@@ -17,70 +17,137 @@
             max-width: 800px;
             margin: 0 auto;
         }
-        .events-list {
-            width: 100%;
-        }
-        .event {
-            cursor: pointer;
-            padding: 15px;
-            border: 1px solid #ccc;
+        .reader-info {
             margin-bottom: 20px;
+            background-color: #f0f0f0;
+            padding: 15px;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
         }
-        .event.selected {
-            background-color: #e0e0e0;
-        }
-        .event p {
-            margin: 5px 0;
-        }
-        .event-photos {
+        .photo-container {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
+            margin-bottom: 20px;
         }
-        .event-photo {
+        .photo {
             width: 48%;
-            max-width: 300px;
         }
-        .event-photo img {
+        .photo img {
             width: 100%;
             height: auto;
             border-radius: 5px;
         }
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
+        .events-list {
+            width: 100%;
         }
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        .event {
+            position: relative;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 40px;
         }
-        button:hover {
+        .event.selected {
+            box-shadow: 0 0 0 4px orange;
+        }
+        .event-left, .event-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+        .event-right {
+            margin-right: 30px;
+            text-align: right;
+        }
+        .event-info p {
+            margin: 0;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            line-height: 1.1;
+        }
+        .event-left p:first-child,
+        .event-right p:first-child {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .event-left p:last-child,
+        .event-right p:last-child {
+            font-size: 12px;
+        }
+        .small-text {
+            font-size: 12px;
+
+        }
+        .event-actions {
+            position: absolute;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+        }
+        .event-actions-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .event-actions-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            bottom: 100%;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 10;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+        .event-actions-menu button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 5px 10px;
+            margin: 2px 0;
+            background: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .event-actions-menu button:hover {
             background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <div id="app" class="container">
-        <div class="events-list">
-            <h1>Events</h1>
+    <div class="container">
+        <div class="reader-info">
+            <h2>Informacje o czytniku</h2>
             <p><strong>Reader ID:</strong> <span id="readerId"></span></p>
             <p><strong>Reader Name:</strong> <span id="readerName"></span></p>
             <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
-            <div id="events"></div>
-            <div class="actions">
-                <button onclick="handleAction('info')">Info</button>
-                <button onclick="handleAction('block')">Block Card</button>
-                <button onclick="handleAction('unblock')">Unblock Card</button>
+        </div>
+        <div class="photo-container">
+            <div class="photo">
+                <p><strong>Oryginalne zdjęcie:</strong></p>
+                <img id="originalPhoto" src="" alt="Oryginalne zdjęcie">
+            </div>
+            <div class="photo">
+                <p><strong>Aktualne zdjęcie:</strong></p>
+                <img id="currentPhoto" src="" alt="Aktualne zdjęcie">
             </div>
         </div>
+        <div class="events-list" id="events"></div>
     </div>
 
     <script>
@@ -98,27 +165,32 @@
                 selectedEventIndex = 0;
             }
             renderEvents();
+            updatePhotos();
         }
 
         function renderEvents() {
             const eventsContainer = document.getElementById('events');
             eventsContainer.innerHTML = events.map((event, index) => {
                 console.log(`Rendering event ${index}:`, JSON.stringify(event, null, 2));
+                const backgroundColor = `#${event.COLOR.toString(16).padStart(6, '0')}`;
                 return `
-                    <div class="event ${index === selectedEventIndex ? 'selected' : ''}" onclick="selectEvent(${index})">
-                        <p><strong>ID:</strong> ${event.ID}</p>
-                        <p><strong>Date:</strong> ${event.DATE}</p>
-                        <p><strong>Ticket Name:</strong> ${event.TICKET_NAME}</p>
-                        <p><strong>Ticket Type:</strong> ${event.TICKET_TYPE}</p>
-                        <p><strong>Color:</strong> ${event.COLOR}</p>
-                        <div class="event-photos">
-                            <div class="event-photo">
-                                <p><strong>Original Photo:</strong></p>
-                                ${event.PHOTO_ORG ? `<img src="data:image/jpeg;base64,${event.PHOTO_ORG}" alt="Original Photo">` : 'No photo available'}
-                            </div>
-                            <div class="event-photo">
-                                <p><strong>Current Photo:</strong></p>
-                                ${event.PHOTO_CUR ? `<img src="data:image/jpeg;base64,${event.PHOTO_CUR}" alt="Current Photo">` : 'No photo available'}
+                    <div id="event-${index}" class="event ${index === selectedEventIndex ? 'selected' : ''}" 
+                         onclick="selectEvent(${index})"
+                         style="background-color: ${backgroundColor};">
+                        <div class="event-left">
+                            <p>${event.TICKET_NAME}</p>
+                            <p class="small-text">Ilość biletów: ${event.TICKET_TYPE}</p>
+                        </div>
+                        <div class="event-right">
+                            <p>${event.DATE}</p>
+                            <p class="small-text">ID: ${event.ID}</p>
+                        </div>
+                        <div class="event-actions">
+                            <button class="event-actions-toggle" onclick="toggleEventActions(event, ${index})">⋮</button>
+                            <div class="event-actions-menu" id="event-actions-${index}">
+                                <button onclick="handleAction('info', ${index})">Info</button>
+                                <button onclick="handleAction('block', ${index})">Block Card</button>
+                                <button onclick="handleAction('unblock', ${index})">Unblock Card</button>
                             </div>
                         </div>
                     </div>
@@ -129,17 +201,26 @@
         function selectEvent(index) {
             selectedEventIndex = index;
             renderEvents();
+            updatePhotos();
+            scrollToSelectedEvent();
         }
 
         function scrollToSelectedEvent() {
-            const selectedEvent = document.getElementById(`event-${selectedEventIndex}`);
+            const selectedEvent = document.querySelector('.event.selected');
             if (selectedEvent) {
                 selectedEvent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
 
-        function handleAction(action) {
-            const cardId = events[selectedEventIndex].ID;
+        function updatePhotos() {
+            const event = events[selectedEventIndex];
+            document.getElementById('originalPhoto').src = event.PHOTO_ORG ? `data:image/jpeg;base64,${event.PHOTO_ORG}` : '';
+            document.getElementById('currentPhoto').src = event.PHOTO_CUR ? `data:image/jpeg;base64,${event.PHOTO_CUR}` : '';
+        }
+
+        function handleAction(action, index) {
+            event.stopPropagation();
+            const cardId = events[index].ID;
             fetch('/xsol-api-endpoint', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -154,7 +235,25 @@
                     alert('Action ' + action + ' failed');
                 }
             });
+            // Zamknij menu akcji po wykonaniu akcji
+            document.getElementById(`event-actions-${index}`).style.display = 'none';
         }
+
+        function toggleEventActions(event, index) {
+            event.stopPropagation();
+            const actionsMenu = document.getElementById(`event-actions-${index}`);
+            actionsMenu.style.display = actionsMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Dodaj nasłuchiwanie kliknięć poza menu akcji, aby je zamknąć
+        document.addEventListener('click', function(event) {
+            const actionMenus = document.querySelectorAll('.event-actions-menu');
+            actionMenus.forEach(menu => {
+                if (menu.style.display === 'block' && !menu.contains(event.target) && !event.target.classList.contains('event-actions-toggle')) {
+                    menu.style.display = 'none';
+                }
+            });
+        });
 
         socket.on('connect', () => {
             const id = window.location.pathname.slice(1);
@@ -173,10 +272,6 @@
             const data = JSON.parse(dataString);
             console.log('Parsed update data:', data);
             updateUI(data);
-            if (events.length > previousEventsCount) {
-                // Jeśli pojawiły się nowe wydarzenia, przewiń do zaznaczonego
-                scrollToSelectedEvent();
-            }
         });
     </script>
 </body>
