@@ -4,6 +4,8 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 
 const xsolApp = express();
 const xsolPort = 4000;
+const mainServerPort = 3000;
+const mainServerUrl = `http://localhost:${mainServerPort}`;
 
 xsolApp.use(express.json());
 
@@ -33,27 +35,24 @@ function generateMockData() {
     };
 }
 
+const proxyConfig = {
+    protocol: 'http',
+    host: '172.16.2.254',
+    port: 3128,
+};
+
+// Create a proxy agent
+const httpsAgent = new HttpsProxyAgent(`${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`);
+const axiosConfig = {
+    httpsAgent,
+    proxy: false  // This is important to prevent axios from using the system proxy
+};
+
 // Function to send mock data to the main server
 function sendMockData() {
     const mockData = generateMockData();
-    axios.post('https://xsolhtml.onrender.com', mockData)
-    // axios.post('http://172.16.2.150:3000', mockData)
-
-    const proxyConfig = {
-        protocol: 'http',
-        host: '172.16.2.254',  // Remove 'http://' from here
-        port: 3128,  
-    };
     
-    // Create a proxy agent
-    const httpsAgent = new HttpsProxyAgent(`${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`);
-    const axiosConfig = {
-        httpsAgent,
-        proxy: false  // This is important to prevent axios from using the system proxy
-    };
-    
-    // axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
-      axios.post('http://localhost:3000/', mockData, axiosConfig)
+    axios.post('http://localhost:3000/', mockData, axiosConfig)
         .then(response => {
             console.log('Mock data sent successfully:', response.data);
         })
@@ -68,12 +67,28 @@ function sendMockData() {
         });
 };
 
+function checkMainServer(retries = 5, delay = 2000) {
+    console.log(`Attempting to connect to main server at ${mainServerUrl}/available-routes`);
+    axios.get(`${mainServerUrl}/available-routes`, axiosConfig)
+        .then(response => {
+            console.log('Available routes on startup:', response.data);
+        })
+        .catch(error => {
+            console.error(`Error connecting to main server: ${error.message}`);
+            if (retries > 0) {
+                console.log(`Retrying in ${delay/1000} seconds... (${retries} attempts left)`);
+                setTimeout(() => checkMainServer(retries - 1, delay), delay);
+            } else {
+                console.error('Failed to connect to main server after multiple attempts');
+            }
+        });
+}
 
 // Send mock data when the server starts
-sendMockData();
+// sendMockData();
 
 
-setInterval(sendMockData, 2000);
+// setInterval(sendMockData, 2000);
 
 xsolApp.post('/xsol-api-endpoint', (req, res) => {
     console.log("Xsol server received:", req.body);
@@ -82,4 +97,8 @@ xsolApp.post('/xsol-api-endpoint', (req, res) => {
 
 xsolApp.listen(xsolPort, () => {
     console.log(`Mock Xsol server listening on port ${xsolPort}`);
+    checkMainServer();  // Start checking for the main server
 });
+
+// Uncomment these lines if you want to periodically send mock data
+// setInterval(sendMockData, 10000);  // Send mock data every 10 seconds

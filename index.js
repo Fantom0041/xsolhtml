@@ -93,7 +93,7 @@ app.post('/', cors(), async (req, res) => {
         const processedData = await processEventData(eventData);
 
         console.log(`Emitting updateData event to room: ${eventData.READER_ID}`);
-        console.log('Sending processed data to client:', JSON.stringify(processedData, null, 2));
+        // console.log('Sending processed data to client:', JSON.stringify(processedData, null, 2));
         io.to(eventData.READER_ID).emit('updateData', JSON.stringify(processedData));
 
         res.send('JSON received, saved, and processed');
@@ -101,6 +101,30 @@ app.post('/', cors(), async (req, res) => {
     } catch (error) {
         console.error('Error processing data:', error);
         res.status(500).send('Error processing data');
+    }
+});
+
+app.get('/available-routes', async (req, res) => {
+    try {
+        const files = await fs.readdir(jsonFolder);
+        const jsonFiles = files.filter(file => path.extname(file).toLowerCase() === '.json');
+        
+        const routes = await Promise.all(jsonFiles.map(async file => {
+            const routeId = path.basename(file, '.json');
+            const filePath = path.join(jsonFolder, file);
+            const fileContent = await fs.readFile(filePath, 'utf8');
+            const jsonData = JSON.parse(fileContent);
+            return {
+                id: routeId,
+                name: jsonData.READER_NAME || 'Unknown',
+                url: `${req.protocol}://${req.get('host')}/${routeId}`
+            };
+        }));
+
+        res.json(routes);
+    } catch (error) {
+        console.error('Error reading JSON folder:', error);
+        res.status(500).json({ error: 'Unable to retrieve available routes' });
     }
 });
 
@@ -117,6 +141,8 @@ app.get('/:id', async (req, res) => {
         }
     }
 });
+
+
 
 io.on('connection', (socket) => {
     console.log('A user connected');
