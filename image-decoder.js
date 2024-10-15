@@ -22,6 +22,55 @@ const xsolCrypt = new XSolCrypt();
 // Serve static files from the 'photos' directory
 app.use('/photos', express.static('photos'));
 
+// Function to encode an image
+function encodeImage(imagePath) {
+    console.log(`Attempting to encode image: ${imagePath}`);
+    try {
+        // Read the image file
+        const imageBuffer = fs.readFileSync(imagePath);
+        
+        // Convert buffer to string
+        const imageString = imageBuffer.toString('binary');
+        
+        // Encode the image
+        const encodedImage = xsolCrypt.encode(imageString);
+        
+        // Generate the new filename
+        const dir = path.dirname(imagePath);
+        const ext = path.extname(imagePath);
+        const baseName = path.basename(imagePath, ext);
+        const encodedImagePath = path.join(dir, `${baseName}_encoded${ext}c`);
+        
+        // Write the encoded image
+        fs.writeFileSync(encodedImagePath, encodedImage, 'binary');
+        
+        console.log(`Encoded image saved to: ${encodedImagePath}`);
+        return encodedImagePath;
+    } catch (error) {
+        console.error(`Error encoding image ${imagePath}:`, error);
+        return null;
+    }
+}
+
+// Endpoint to encode an image
+app.get('/encode/:imageName', (req, res) => {
+    const imageName = req.params.imageName;
+    const imagePath = path.join(__dirname, 'photos', imageName);
+    
+    const encodedImagePath = encodeImage(imagePath);
+    
+    if (encodedImagePath) {
+        res.json({ success: true, encodedImage: path.basename(encodedImagePath) });
+    } else {
+        res.status(500).json({ success: false, error: 'Failed to encode image' });
+    }
+});
+
+// decoded immage is photos/D438621323945S1702907564.jpgc
+
+// Serve static files from the 'photos' directory
+app.use('/photos', express.static('photos'));
+
 // Endpoint to decode an image
 app.get('/decode/:imageName', (req, res) => {
     const imageName = req.params.imageName;
@@ -71,23 +120,13 @@ function decodeImage(imagePath) {
     }
 }
 
+
+
 // Start the server
 http.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
     
-    // Decode all images in the 'photos' directory on server start
-    const photosDir = path.join(__dirname, 'photos');
-    fs.readdir(photosDir, (err, files) => {
-        if (err) {
-            console.error('Error reading photos directory:', err);
-            return;
-        }
-        
-        files.forEach(file => {
-            if (file.endsWith('.jpgc')) {
-                const imagePath = path.join(photosDir, file);
-                decodeImage(imagePath);
-            }
-        });
-    });
+    // Encode cur1.png on server start
+    const imagePath = path.join(__dirname, 'photos', 'cur1.png');
+    encodeImage(imagePath);
 });
