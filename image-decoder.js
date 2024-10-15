@@ -71,6 +71,33 @@ app.get('/encode/:imageName', (req, res) => {
 // Serve static files from the 'photos' directory
 app.use('/photos', express.static('photos'));
 
+// Function to decode an image
+function decodeImage(encodedImagePath) {
+    console.log(`Attempting to decode image: ${encodedImagePath}`);
+    try {
+        // Read the encoded image file
+        const encodedImageBuffer = fs.readFileSync(encodedImagePath);
+        
+        // Decode the image
+        const decodedImage = xsolCrypt.decode(encodedImageBuffer);
+        
+        // Generate the new filename
+        const dir = path.dirname(encodedImagePath);
+        const ext = path.extname(encodedImagePath).slice(0, -1); // Remove the 'c' at the end
+        const baseName = path.basename(encodedImagePath, path.extname(encodedImagePath));
+        const decodedImagePath = path.join(dir, `${baseName}_decoded${ext}`);
+        
+        // Write the decoded image
+        fs.writeFileSync(decodedImagePath, decodedImage);
+        
+        console.log(`Decoded image saved to: ${decodedImagePath}`);
+        return decodedImagePath;
+    } catch (error) {
+        console.error(`Error decoding image ${encodedImagePath}:`, error);
+        return null;
+    }
+}
+
 // Endpoint to decode an image
 app.get('/decode/:imageName', (req, res) => {
     const imageName = req.params.imageName;
@@ -84,49 +111,14 @@ app.get('/decode/:imageName', (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to decode image' });
     }
 });
-function decodeImage(imagePath) {
-    console.log(`Attempting to decode image: ${imagePath}`);
-    try {
-        console.log('Reading encoded image file...');
-        const encodedImage = fs.readFileSync(imagePath, 'binary');
-        console.log(`Encoded image length: ${encodedImage.length} bytes`);
-        
-        console.log('Decoding image...');
-        const decodedImage = xsolCrypt.decode(encodedImage);
-        console.log(`Decoded image length: ${decodedImage.length} bytes`);
-        
-        // Check if the decoded data looks like a JPEG
-        const isJpeg = decodedImage.slice(0, 3).toString('hex').toUpperCase() === 'FFD8FF';
-        console.log(`Decoded data appears to be a valid JPEG: ${isJpeg}`);
-        
-        // Save raw decoded data
-        const rawDecodedPath = path.join(path.dirname(imagePath), `raw_decoded_${path.basename(imagePath, '.jpgc')}.bin`);
-        fs.writeFileSync(rawDecodedPath, decodedImage);
-        console.log(`Raw decoded data written to: ${rawDecodedPath}`);
-        
-        // If it looks like a JPEG, save it as a .jpg file
-        if (isJpeg) {
-            const decodedImagePath = path.join(path.dirname(imagePath), `decoded_${path.basename(imagePath, '.jpgc')}.jpg`);
-            fs.writeFileSync(decodedImagePath, decodedImage);
-            console.log(`Decoded image written to: ${decodedImagePath}`);
-            return decodedImagePath;
-        } else {
-            console.log('Decoded data does not appear to be a valid JPEG. Check the raw decoded file.');
-            return null;
-        }
-    } catch (error) {
-        console.error(`Error decoding image ${imagePath}:`, error);
-        return null;
-    }
-}
-
-
 
 // Start the server
 http.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
     
-    // Encode cur1.png on server start
-    const imagePath = path.join(__dirname, 'photos', 'cur1.png');
-    encodeImage(imagePath);
+    // Decode cur1_encoded.pngc on server start
+    const encodedImagePath = path.join(__dirname, 'photos', 'cur1_encoded.pngc');
+    decodeImage(encodedImagePath);
+    // const decodedImagePath = path.join(__dirname, 'photos', 'cur1.png');
+    // encodeImage(decodedImagePath);
 });

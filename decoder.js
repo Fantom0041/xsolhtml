@@ -37,38 +37,17 @@ class XSolCrypt {
       : this.KEY_DEFAULT;
   }
 
-  crc32(data) {
-    let crc = 0xffffffff;
-    const table = this.createCRC32Table();
-
-    for (let i = 0; i < data.length; i++) {
-      crc = (crc >>> 8) ^ table[(crc ^ data[i]) & 0xff];
-    }
-
-    return (crc ^ 0xffffffff) >>> 0;
-  }
-
-  createCRC32Table() {
-    let table = new Array(256);
-    for (let i = 0; i < 256; i++) {
-      let c = i;
-      for (let j = 0; j < 8; j++) {
-        c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-      }
-      table[i] = c;
-    }
-    return table;
-  }
-
   encode(f) {
+    const buffer = Buffer.from(f);
+    
     // Check if already encrypted
-    if (f.substring(0, 11) === "XCRYPT 1.00") {
-      return f;
+    if (buffer.toString("ascii", 0, 11) === "XCRYPT 1.00") {
+      return buffer;
     }
 
     // Calculate CRC
     const crc32 = new crc32o();
-    crc32.put(Buffer.from(f), f.length);
+    crc32.put(buffer, buffer.length);
     const crc = crc32.getcrc();
 
     // Encrypt file
@@ -79,19 +58,15 @@ class XSolCrypt {
     let keyi2 = ((crc >> 24) & 0xff00) | ((crc >> 8) & 0xff);
     while (keyi2 >= this.CONST_KEY_LEN) keyi2 >>= 1;
 
-    let nf = "XCRYPT 1.00";
+    let nf = Buffer.alloc(buffer.length + 15);
+    nf.write("XCRYPT 1.00", 0);
 
     // Add CRC
-    nf += String.fromCharCode((crc >> 24) & 0xff);
-    nf += String.fromCharCode((crc >> 16) & 0xff);
-    nf += String.fromCharCode((crc >> 8) & 0xff);
-    nf += String.fromCharCode(crc & 0xff);
+    nf.writeUInt32BE(crc, 11);
 
     // Encrypt data
-    for (let i = 0; i < f.length; i++) {
-      nf += String.fromCharCode(
-        f.charCodeAt(i) ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2]
-      );
+    for (let i = 0; i < buffer.length; i++) {
+      nf[i + 15] = buffer[i] ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2];
 
       keyi++;
       if (keyi >= key.length) keyi = 0;
@@ -115,16 +90,12 @@ class XSolCrypt {
     }
 
     // Get CRC [4 bytes]
-    let crc = 0;
-    crc += (buffer[11] & 0xff) << 24;
-    crc += (buffer[12] & 0xff) << 16;
-    crc += (buffer[13] & 0xff) << 8;
-    crc += buffer[14] & 0xff;
+    const crc = buffer.readUInt32BE(11);
 
     // Decrypt file
     let ki = this.KEYS.length;
     let key = "";
-    let nf = "";
+    let nf;
 
     do {
       key = this.getKey(ki);
@@ -135,12 +106,10 @@ class XSolCrypt {
       let keyi2 = ((crc >> 24) & 0xff00) | ((crc >> 8) & 0xff);
       while (keyi2 >= this.CONST_KEY_LEN) keyi2 >>= 1;
 
-      nf = "";
+      nf = Buffer.alloc(buffer.length - 15);
 
       for (let i = 15; i < buffer.length; i++) {
-        nf += String.fromCharCode(
-          buffer[i] ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2]
-        );
+        nf[i - 15] = buffer[i] ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2];
 
         keyi++;
         if (keyi >= key.length) {
@@ -155,9 +124,9 @@ class XSolCrypt {
 
       // Check CRC
       const crc32 = new crc32o();
-      crc32.put(Buffer.from(nf), nf.length);
+      crc32.put(nf, nf.length);
       if (crc32.getcrc() === crc) {
-        return Buffer.from(nf);
+        return nf;
       } else {
         ki--;
       }
