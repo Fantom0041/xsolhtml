@@ -152,13 +152,17 @@
             socket.emit('join', id);
         });
 
-        socket.on('initialData', (data) => {
-            console.log('Received initial data:', data);
+        socket.on('initialData', (dataString) => {
+            console.log('Received initial data string:', dataString);
+            const data = JSON.parse(dataString);
+            console.log('Parsed initial data:', data);
             updateUI(data);
         });
 
-        socket.on('updateData', (data) => {
-            console.log('Received update data:', data);
+        socket.on('updateData', (dataString) => {
+            console.log('Received update data string:', dataString);
+            const data = JSON.parse(dataString);
+            console.log('Parsed update data:', data);
             updateUI(data);
         });
     </script>

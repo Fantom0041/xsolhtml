@@ -59,6 +59,25 @@ async function decodeImage(imagePath) {
     }
 }
 
+async function processEventData(eventData) {
+    console.log('Processing event data...');
+    if (eventData.EVENTS && eventData.EVENTS.length > 0) {
+        for (let event of eventData.EVENTS) {
+            if (event.ORG_PHOTO_PATH) {
+                console.log(`Decoding original photo: ${event.ORG_PHOTO_PATH}`);
+                event.PHOTO_ORG = await decodeImage(event.ORG_PHOTO_PATH);
+                console.log(`Original photo decoded: ${event.PHOTO_ORG ? 'success' : 'failed'}`);
+            }
+            if (event.CUR_PHOTO_PATH) {
+                console.log(`Decoding current photo: ${event.CUR_PHOTO_PATH}`);
+                event.PHOTO_CUR = await decodeImage(event.CUR_PHOTO_PATH);
+                console.log(`Current photo decoded: ${event.PHOTO_CUR ? 'success' : 'failed'}`);
+            }
+        }
+    }
+    return eventData;
+}
+
 app.post('/', cors(), async (req, res) => {
     const eventData = req.body;
     console.log('Received JSON data:', JSON.stringify(eventData, null, 2));
@@ -70,14 +89,18 @@ app.post('/', cors(), async (req, res) => {
         await fs.writeFile(filePath, JSON.stringify(eventData, null, 2));
         console.log('Data saved successfully');
 
-        console.log(`Emitting updateData event to room: ${eventData.READER_ID}`);
-        io.to(eventData.READER_ID).emit('updateData', eventData);
+        // Process and decode images
+        const processedData = await processEventData(eventData);
 
-        res.send('JSON received and saved');
+        console.log(`Emitting updateData event to room: ${eventData.READER_ID}`);
+        console.log('Sending processed data to client:', JSON.stringify(processedData, null, 2));
+        io.to(eventData.READER_ID).emit('updateData', JSON.stringify(processedData));
+
+        res.send('JSON received, saved, and processed');
         console.log('Response sent to client');
     } catch (error) {
-        console.error('Error saving data:', error);
-        res.status(500).send('Error saving data');
+        console.error('Error processing data:', error);
+        res.status(500).send('Error processing data');
     }
 });
 
@@ -111,30 +134,14 @@ io.on('connection', (socket) => {
         try {
             const data = await fs.readFile(filePath, 'utf8');
             console.log('JSON file read successfully');
-            const jsonData = JSON.parse(data);
+            let jsonData = JSON.parse(data);
             console.log(`Parsed JSON data. Events count: ${jsonData.EVENTS.length}`);
             
-            // Decode images for each event
-            console.log('Starting to decode images for events...');
-            const decodedEvents = await Promise.all(jsonData.EVENTS.map(async (event, index) => {
-                console.log(`Processing event ${index + 1}/${jsonData.EVENTS.length}`);
-                if (event.ORG_PHOTO_PATH) {
-                    console.log(`Decoding original photo: ${event.ORG_PHOTO_PATH}`);
-                    event.PHOTO_ORG = await decodeImage(event.ORG_PHOTO_PATH);
-                    console.log(`Original photo decoded: ${event.PHOTO_ORG ? 'success' : 'failed'}`);
-                }
-                if (event.CUR_PHOTO_PATH) {
-                    console.log(`Decoding current photo: ${event.CUR_PHOTO_PATH}`);
-                    event.PHOTO_CUR = await decodeImage(event.CUR_PHOTO_PATH);
-                    console.log(`Current photo decoded: ${event.PHOTO_CUR ? 'success' : 'failed'}`);
-                }
-                return event;
-            }));
+            // Process and decode images
+            jsonData = await processEventData(jsonData);
 
-            jsonData.EVENTS = decodedEvents;
             console.log('All events processed. Sending initial data to client...');
-            console.log('Sending data to client:', JSON.stringify(jsonData, null, 2));
-            socket.emit('initialData', jsonData);
+            socket.emit('initialData', JSON.stringify(jsonData));
         } catch (err) {
             console.error(`Error reading file ${id}.json:`, err);
         }

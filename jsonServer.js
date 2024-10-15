@@ -26,8 +26,8 @@ function generateMockData() {
             DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
             TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
             TICKET_TYPE: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
-            ORG_PHOTO_PATH: 'photos/D438621323945S1702907564.jpgc',
-            CUR_PHOTO_PATH: 'photos/D438621323945S1702907564.jpgc',
+            ORG_PHOTO_PATH: 'test_pic/D438621323945S1702907564.jpgc',
+            CUR_PHOTO_PATH: 'test_pic/D438621323945S1702907564.jpgc',
             COLOR: colors[Math.floor(Math.random() * colors.length)]
         }))
     };
