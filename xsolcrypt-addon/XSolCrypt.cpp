@@ -1,5 +1,5 @@
 #include "XSolCrypt.h"
-#include <Lib/crc32o.h>
+#include "crc32o.h"
 
 
 const unsigned char XSolCrypt::DEF_KEY[] = {

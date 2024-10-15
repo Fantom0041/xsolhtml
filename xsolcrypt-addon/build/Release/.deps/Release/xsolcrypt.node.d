@@ -1,0 +1,1 @@
+cmd_Release/xsolcrypt.node := ln -f "Release/obj.target/xsolcrypt.node" "Release/xsolcrypt.node" 2>/dev/null || (rm -rf "Release/xsolcrypt.node" && cp -af "Release/obj.target/xsolcrypt.node" "Release/xsolcrypt.node")

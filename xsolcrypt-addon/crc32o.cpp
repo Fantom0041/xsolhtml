@@ -1,4 +1,4 @@
-#include "gcc_defs.h"
+// #include "gcc_defs.h"
 #include "crc32o.h"
 
 bool crc32o::table_init=false;

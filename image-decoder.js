@@ -6,6 +6,8 @@ const app = express();
 const http = require('http').createServer(app);
 // const io = require('socket.io')(http);
 const port = 3005;
+const xsolcrypt = require('./xsolcrypt-addon/build/Release/xsolcrypt.node');
+
 // const XSolCrypt = require('./decoder'); // Import the XSolCrypt class
 
 // Enable CORS
@@ -71,31 +73,31 @@ app.get('/encode/:imageName', (req, res) => {
 // Serve static files from the 'photos' directory
 app.use('/photos', express.static('photos'));
 
-// Function to decode an image
+// Function to decode an image using the C++ addon
 function decodeImage(encodedImagePath) {
-    console.log(`Attempting to decode image: ${encodedImagePath}`);
-    try {
-        // Read the encoded image file
-        const encodedImageBuffer = fs.readFileSync(encodedImagePath);
-        
-        // Decode the image
-        const decodedImage = xsolCrypt.decode(encodedImageBuffer);
-        
-        // Generate the new filename
-        const dir = path.dirname(encodedImagePath);
-        const ext = path.extname(encodedImagePath).slice(0, -1); // Remove the 'c' at the end
-        const baseName = path.basename(encodedImagePath, path.extname(encodedImagePath));
-        const decodedImagePath = path.join(dir, `${baseName}_decoded${ext}`);
-        
-        // Write the decoded image
-        fs.writeFileSync(decodedImagePath, decodedImage);
-        
-        console.log(`Decoded image saved to: ${decodedImagePath}`);
-        return decodedImagePath;
-    } catch (error) {
-        console.error(`Error decoding image ${encodedImagePath}:`, error);
-        return null;
-    }
+  console.log(`Attempting to decode image: ${encodedImagePath}`);
+  try {
+    // Read the encoded image file
+    const encodedImageBuffer = fs.readFileSync(encodedImagePath);
+    
+    // Decode the image using the C++ addon
+    const decodedBuffer = xsolcrypt.decode(encodedImageBuffer);
+    
+    // Generate the new filename
+    const dir = path.dirname(encodedImagePath);
+    const ext = path.extname(encodedImagePath).slice(0, -1); // Remove the 'c' at the end
+    const baseName = path.basename(encodedImagePath, path.extname(encodedImagePath));
+    const decodedImagePath = path.join(dir, `${baseName}_decoded${ext}`);
+    
+    // Write the decoded image
+    fs.writeFileSync(decodedImagePath, decodedBuffer);
+    
+    console.log(`Decoded image saved to: ${decodedImagePath}`);
+    return decodedImagePath;
+  } catch (error) {
+    console.error(`Error decoding image ${encodedImagePath}:`, error);
+    return null;
+  }
 }
 
 // Endpoint to decode an image
@@ -117,7 +119,7 @@ http.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
     
     // Decode cur1_encoded.pngc on server start
-    const encodedImagePath = path.join(__dirname, 'photos', 'cur1_encoded.pngc');
+    const encodedImagePath = path.join(__dirname, 'photos', 'D438621323945S1702907564.jpgc');
     decodeImage(encodedImagePath);
     // const decodedImagePath = path.join(__dirname, 'photos', 'cur1.png');
     // encodeImage(decodedImagePath);

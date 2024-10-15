@@ -1,0 +1,1 @@
+cmd_Release/obj.target/xsolcrypt.node := g++ -o Release/obj.target/xsolcrypt.node -shared -pthread -rdynamic -m64  -Wl,-soname=xsolcrypt.node -Wl,--start-group Release/obj.target/xsolcrypt/xsolcrypt_wrapper.o Release/obj.target/xsolcrypt/XSolCrypt.o Release/obj.target/xsolcrypt/crc32o.o Release/obj.target/../node_modules/node-addon-api/nothing.a -Wl,--end-group -lstdc++

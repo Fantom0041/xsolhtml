@@ -1,5 +1,6 @@
 #include <napi.h>
 #include "XSolCrypt.h"
+#include "crc32o.h" 
 
 Napi::Value Decode(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
