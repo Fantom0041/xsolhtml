@@ -50,7 +50,8 @@ function sendMockData() {
         proxy: false  // This is important to prevent axios from using the system proxy
     };
     
-    axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
+    // axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
+      axios.post('https://xsolhtml.onrender.com/', mockData, axiosConfig)
         .then(response => {
             console.log('Mock data sent successfully:', response.data);
         })
