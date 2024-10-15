@@ -67,7 +67,9 @@ class XSolCrypt {
     }
 
     // Calculate CRC
-    const crc = crc32o(Buffer.from(f));
+    const crc32 = new crc32o();
+    crc32.put(Buffer.from(f), f.length);
+    const crc = crc32.getcrc();
 
     // Encrypt file
     const key = this.getLastKey();
@@ -90,7 +92,6 @@ class XSolCrypt {
       nf += String.fromCharCode(
         f.charCodeAt(i) ^ key.charCodeAt(keyi) ^ this.CONST_KEY[keyi2]
       );
-      
 
       keyi++;
       if (keyi >= key.length) keyi = 0;
