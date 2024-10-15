@@ -18,10 +18,26 @@
             margin: 0 auto;
         }
         .reader-info {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             background-color: #f0f0f0;
-            padding: 15px;
+            padding: 10px;
             border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .reader-info h2 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .reader-info p {
+            margin: 0;
+            line-height: 1.4;
+            display: flex;
+            justify-content: space-between;
+        }
+        .reader-info span {
+            flex: 1;
+            padding: 0 5px;
         }
         .photo-container {
             display: flex;
@@ -133,9 +149,11 @@
     <div class="container">
         <div class="reader-info">
             <h2>Informacje o czytniku</h2>
-            <p><strong>Reader ID:</strong> <span id="readerId"></span></p>
-            <p><strong>Reader Name:</strong> <span id="readerName"></span></p>
-            <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+            <p>
+                <span><strong>ID:</strong> <span id="readerId"></span></span>
+                <span><strong>Nazwa:</strong> <span id="readerName"></span></span>
+                <span><strong>Czas:</strong> <span id="timestamp"></span></span>
+            </p>
         </div>
         <div class="photo-container">
             <div class="photo">
@@ -179,7 +197,7 @@
                          style="background-color: ${backgroundColor};">
                         <div class="event-left">
                             <p>${event.TICKET_NAME}</p>
-                            <p class="small-text">Ilość biletów: ${event.TICKET_TYPE}</p>
+                            <p class="small-text">Typ biletu: ${event.TICKET_TYPE}</p>
                         </div>
                         <div class="event-right">
                             <p>${event.DATE}</p>
