@@ -5,7 +5,13 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const xsolApp = express();
 const xsolPort = 4000;
 const mainServerPort = 3000;
-const mainServerUrl = `http://localhost:${mainServerPort}`;
+
+// Determine the main server URL based on the environment
+const mainServerUrl = process.env.NODE_ENV === 'production'
+    ? 'https://xsolhtml.onrender.com'
+    : `http://localhost:${mainServerPort}`;
+
+console.log(`Main server URL: ${mainServerUrl}`);
 
 xsolApp.use(express.json());
 
@@ -53,24 +59,21 @@ const proxyConfig = {
 const httpsAgent = new HttpsProxyAgent(`${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`);
 const axiosConfig = {
     httpsAgent,
-    proxy: false  // This is important to prevent axios from using the system proxy
+    proxy: false
 };
 
 // Function to send mock data to the main server
 function sendMockData() {
     const mockData = generateMockData();
     
-    // Use http for localhost, https for remote server
-    const url = process.env.NODE_ENV === 'production' 
-        ? 'https://xsolhtml.onrender.com/' 
-        : `${mainServerUrl}/`;
+    const config = process.env.NODE_ENV_PROXY === 'true' ? axiosConfig : {};
 
-    axios.post(url, mockData, process.env.NODE_ENV === 'production' ? axiosConfig : {})
+    axios.post(`${mainServerUrl}/`, mockData, config)
         .then(response => {
-            console.log('Mock data sent successfully:', response.data);
+            console.log(`Mock data sent successfully to ${mainServerUrl}:`, response.data);
         })
         .catch(error => {
-            console.error('Error sending mock data:', error.message);
+            console.error(`Error sending mock data to ${mainServerUrl}:`, error.message);
             if (error.response) {
                 console.error('Response status:', error.response.status);
                 console.error('Response data:', error.response.data);
@@ -82,7 +85,9 @@ function sendMockData() {
 
 function checkMainServer(retries = 5, delay = 2000) {
     console.log(`Attempting to connect to main server at ${mainServerUrl}/available-routes`);
-    axios.get(`${mainServerUrl}/available-routes`, process.env.NODE_ENV === 'production' ? axiosConfig : {})
+    const config = process.env.NODE_ENV_PROXY === 'true' ? axiosConfig : {};
+    
+    axios.get(`${mainServerUrl}/available-routes`, config)
         .then(response => {
             console.log('Available routes on startup:');
             response.data.forEach(route => {
@@ -103,6 +108,7 @@ function checkMainServer(retries = 5, delay = 2000) {
 // Send mock data when the server starts
 sendMockData();
 
+// Set interval for sending mock data
 setInterval(sendMockData, 2000);
 
 xsolApp.post('/xsol-api-endpoint', (req, res) => {
