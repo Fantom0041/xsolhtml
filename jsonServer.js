@@ -37,6 +37,7 @@ function generateMockData() {
         EVENTS: Array(8).fill().map(() => {
             const randomPhoto = photoFiles[Math.floor(Math.random() * photoFiles.length)];
             return {
+                EVENT_ID: Math.floor(Math.random() * 1000000000 + 1000000000).toString(),
                 ID: Math.floor(Math.random() * 1000000000 + 1000000000).toString(),
                 DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
                 TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
