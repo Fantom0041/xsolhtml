@@ -350,16 +350,31 @@
 
     <script>
         const socket = io();
-        let selectedEventIndex = 0;
+        let selectedEventId = null;
         let events = [];
+        let isAutoSelected = false; 
 
         function updateUI(data) {
             console.log('Aktualizacja interfejsu użytkownika z danymi:', JSON.stringify(data, null, 2));
             document.getElementById('readerName').textContent = data.READER_NAME;
+            
+            const oldSelectedEvent = events.find(e => e.EVENT_ID === selectedEventId);
+            
             events = data.EVENTS;
-            if (selectedEventIndex === null || selectedEventIndex >= events.length) {
-                selectedEventIndex = 0;
+            
+            if (selectedEventId && !isAutoSelected) {
+                const newSelectedEvent = events.find(e => e.EVENT_ID === selectedEventId);
+                if (newSelectedEvent) {
+                    Object.assign(newSelectedEvent, oldSelectedEvent);
+                } else {
+                    events.unshift(oldSelectedEvent);
+                }
+            } else {
+                
+                selectedEventId = events.length > 0 ? events[0].EVENT_ID : null;
+                isAutoSelected = true;
             }
+            
             renderEvents();
             updatePhotos();
         }
@@ -370,12 +385,12 @@
 
         function renderEvents() {
             const eventsContainer = document.getElementById('events');
-            eventsContainer.innerHTML = events.map((event, index) => {
+            eventsContainer.innerHTML = events.map((event) => {
                 const eventColor = event.COLOR ? intToHexColor(parseInt(event.COLOR)) : '#f0f0f0';
-                console.log(`Event ${index} color: ${eventColor}`);
+                const isSelected = event.EVENT_ID === selectedEventId;
                 return `
-                    <div id="event-${index}" class="event ${index === selectedEventIndex ? 'selected' : ''}" 
-                         onclick="selectEvent(${index})" style="--event-color: ${eventColor};">
+                    <div id="event-${event.EVENT_ID}" class="event ${isSelected ? 'selected' : ''}" 
+                         onclick="selectEvent('${event.EVENT_ID}')" style="--event-color: ${eventColor};">
                         <div class="event-left">
                             <p>${event.TICKET_NAME}</p>
                         </div>
@@ -384,11 +399,11 @@
                             <p>ID: ${event.ID}</p>
                         </div>
                         <div class="event-actions">
-                            <button class="event-actions-toggle" onclick="toggleEventActions(event, ${index})">⋮</button>
-                            <div class="event-actions-menu" id="event-actions-${index}">
-                                <button onclick="handleAction('info', ${index})">Info</button>
-                                <button onclick="handleAction('block', ${index})">Block Card</button>
-                                <button onclick="handleAction('unblock', ${index})">Unblock Card</button>
+                            <button class="event-actions-toggle" onclick="toggleEventActions(event, '${event.EVENT_ID}')">⋮</button>
+                            <div class="event-actions-menu" id="event-actions-${event.EVENT_ID}">
+                                <button onclick="handleAction('info', '${event.EVENT_ID}')">Info</button>
+                                <button onclick="handleAction('block', '${event.EVENT_ID}')">Block Card</button>
+                                <button onclick="handleAction('unblock', '${event.EVENT_ID}')">Unblock Card</button>
                             </div>
                         </div>
                     </div>
@@ -397,19 +412,25 @@
             
           
             const style = document.createElement('style');
-            style.textContent = events.map((event, index) => {
+            style.textContent = events.map((event) => {
                 const eventColor = event.COLOR ? intToHexColor(parseInt(event.COLOR)) : '#f0f0f0';
-                return `#event-${index}::before { background-color: ${eventColor}; }`;
+                return `#event-${event.EVENT_ID}::before { background-color: ${eventColor}; }`;
             }).join('\n');
             document.head.appendChild(style);
         }
 
-        function selectEvent(index) {
-            if (selectedEventIndex === index) {
+        function selectEvent(eventId) {
+            if (selectedEventId === eventId) {
+                selectedEventId = null;
+                isAutoSelected = false;
                 
-                selectedEventIndex = null;
+                if (events.length > 0) {
+                    selectedEventId = events[0].EVENT_ID;
+                    isAutoSelected = true;
+                }
             } else {
-                selectedEventIndex = index;
+                selectedEventId = eventId;
+                isAutoSelected = false;
             }
             renderEvents();
             updatePhotos();
@@ -424,16 +445,13 @@
         }
 
         function updatePhotos() {
-            if (selectedEventIndex === null) {
-                
+            const selectedEvent = events.find(e => e.EVENT_ID === selectedEventId);
+            if (!selectedEvent) {
                 updatePhoto('originalPhoto', 'noOriginalPhoto', null);
                 updatePhoto('currentPhoto', 'noCurrentPhoto', null);
             } else {
-                const event = events[selectedEventIndex];
-                
-                updatePhoto('originalPhoto', 'noOriginalPhoto', event.PHOTO_ORG);
-                
-                updatePhoto('currentPhoto', 'noCurrentPhoto', event.PHOTO_CUR);
+                updatePhoto('originalPhoto', 'noOriginalPhoto', selectedEvent.PHOTO_ORG);
+                updatePhoto('currentPhoto', 'noCurrentPhoto', selectedEvent.PHOTO_CUR);
             }
         }
 
