@@ -46,21 +46,40 @@
         }
         .photo {
             width: 48%;
+            aspect-ratio: 4 / 3;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        .photo p {
-            margin: 0; 
-            font-weight: normal; 
-            font-size: 14px; 
+        .photo-title {
+            text-align: right;
+            margin-bottom: 5px;
+            margin-top: 0; 
+            font-size: 12px;
+            color: #666;
+        }
+        .photo-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            border-radius: 5px;
         }
         .photo img {
             width: 100%;
-            height: auto;
-            border-radius: 5px;
-            cursor: pointer; 
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        .no-photo-text {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
         }
         .events-list {
             width: 100%;
-            margin-top: 0; 
+            margin-top: 0; /* Usunięto górny margines listy eventów */
         }
         .event {
             position: relative;
@@ -291,12 +310,18 @@
         </div>
         <div class="photo-container">
             <div class="photo">
-                <p>Pierwsze:</p>
-                <img id="originalPhoto" src="" alt="Oryginalne zdjęcie" onclick="openModal(this.src)">
+                <p class="photo-title">Pierwsze:</p>
+                <div class="photo-content">
+                    <img id="originalPhoto" src="" alt="Oryginalne zdjęcie" onclick="openModal(this.src)">
+                    <div id="noOriginalPhoto" class="no-photo-text">Brak zdjęcia</div>
+                </div>
             </div>
             <div class="photo">
-                <p>Aktualne:</p>
-                <img id="currentPhoto" src="" alt="Aktualne zdjęcie" onclick="openModal(this.src)">
+                <p class="photo-title">Aktualne:</p>
+                <div class="photo-content">
+                    <img id="currentPhoto" src="" alt="Aktualne zdjęcie" onclick="openModal(this.src)">
+                    <div id="noCurrentPhoto" class="no-photo-text">Brak zdjęcia</div>
+                </div>
             </div>
         </div>
         <div class="events-list" id="events"></div>
@@ -371,8 +396,26 @@
 
         function updatePhotos() {
             const event = events[selectedEventIndex];
-            document.getElementById('originalPhoto').src = event.PHOTO_ORG ? `data:image/jpeg;base64,${event.PHOTO_ORG}` : '';
-            document.getElementById('currentPhoto').src = event.PHOTO_CUR ? `data:image/jpeg;base64,${event.PHOTO_CUR}` : '';
+            updatePhoto('originalPhoto', 'noOriginalPhoto', event.PHOTO_ORG);
+            updatePhoto('currentPhoto', 'noCurrentPhoto', event.PHOTO_CUR);
+        }
+
+        function updatePhoto(imgId, noPhotoId, photoData) {
+            const img = document.getElementById(imgId);
+            const noPhotoText = document.getElementById(noPhotoId);
+            const photoContent = img.parentElement;
+            
+            if (photoData) {
+                img.src = `data:image/jpeg;base64,${photoData}`;
+                img.style.display = 'block';
+                noPhotoText.style.display = 'none';
+                photoContent.style.backgroundColor = 'transparent';
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+                noPhotoText.style.display = 'block';
+                photoContent.style.backgroundColor = '#f0f0f0';
+            }
         }
 
         function handleAction(action, index) {
