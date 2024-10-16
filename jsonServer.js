@@ -11,27 +11,35 @@ xsolApp.use(express.json());
 
 // Mock data generator function
 function generateMockData() {
-    const readerIds = ["69"];
+    const readerIds = ["500", "69"];
     const readerNames = ["ORCZYK_LR1", "ORCZYK_LR2", "ORCZYK_LR3", "ORCZYK_LR4", "ORCZYK_LR5"];
     const ticketNames = ["NIEAKTUALNY!", "Taryfa serwisowa pkt", "Bilet normalny", "Bilet ulgowy"];
     const ticketTypes = ["-1", "12", "1", "2"];
     const colors = ["255", "22015", "65280", "16711680"];
+    const photoFiles = [
+        "D1793379326S1728655200.jpgc",
+        "D1793379326S1728655298.jpgc",
+        "D438621323945S1702907564.jpgc"
+    ];
 
     const randomIndex = Math.floor(Math.random() * readerIds.length);
 
     return {
         READER_ID: readerIds[randomIndex],
-        READER_NAME: readerNames[randomIndex],
+        READER_NAME: readerNames[Math.floor(Math.random() * readerNames.length)],
         TIMESTAMP: new Date().toISOString().replace('T', ' ').substr(0, 19),
-        EVENTS: Array(8).fill().map(() => ({
-            ID: Math.floor(Math.random() * 1000000000 + 1000000000).toString(),
-            DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
-            TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
-            TICKET_TYPE: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
-            ORG_PHOTO_PATH: 'test_pic/D438621323945S1702907564.jpgc',
-            CUR_PHOTO_PATH: 'test_pic/D438621323945S1702907564.jpgc',
-            COLOR: colors[Math.floor(Math.random() * colors.length)]
-        }))
+        EVENTS: Array(8).fill().map(() => {
+            const randomPhoto = photoFiles[Math.floor(Math.random() * photoFiles.length)];
+            return {
+                ID: Math.floor(Math.random() * 1000000000 + 1000000000).toString(),
+                DATE: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString().replace('T', ' ').substr(0, 19),
+                TICKET_NAME: ticketNames[Math.floor(Math.random() * ticketNames.length)],
+                TICKET_TYPE: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+                ORG_PHOTO_PATH: `test_pic/${randomPhoto}`,
+                CUR_PHOTO_PATH: `test_pic/${randomPhoto}`,
+                COLOR: colors[Math.floor(Math.random() * colors.length)]
+            };
+        })
     };
 }
 
@@ -52,7 +60,12 @@ const axiosConfig = {
 function sendMockData() {
     const mockData = generateMockData();
     
-    axios.post('http://localhost:3000/', mockData, axiosConfig)
+    // Use http for localhost, https for remote server
+    const url = process.env.NODE_ENV === 'production' 
+        ? 'https://xsolhtml.onrender.com/' 
+        : `${mainServerUrl}/`;
+
+    axios.post(url, mockData, process.env.NODE_ENV === 'production' ? axiosConfig : {})
         .then(response => {
             console.log('Mock data sent successfully:', response.data);
         })
@@ -65,13 +78,16 @@ function sendMockData() {
                 console.error('No response received');
             }
         });
-};
+}
 
 function checkMainServer(retries = 5, delay = 2000) {
     console.log(`Attempting to connect to main server at ${mainServerUrl}/available-routes`);
-    axios.get(`${mainServerUrl}/available-routes`, axiosConfig)
+    axios.get(`${mainServerUrl}/available-routes`, process.env.NODE_ENV === 'production' ? axiosConfig : {})
         .then(response => {
-            console.log('Available routes on startup:', response.data);
+            console.log('Available routes on startup:');
+            response.data.forEach(route => {
+                console.log(`- ${route.id}: ${route.name} (${route.url})`);
+            });
         })
         .catch(error => {
             console.error(`Error connecting to main server: ${error.message}`);
@@ -87,7 +103,6 @@ function checkMainServer(retries = 5, delay = 2000) {
 // Send mock data when the server starts
 sendMockData();
 
-
 setInterval(sendMockData, 2000);
 
 xsolApp.post('/xsol-api-endpoint', (req, res) => {
@@ -97,7 +112,7 @@ xsolApp.post('/xsol-api-endpoint', (req, res) => {
 
 xsolApp.listen(xsolPort, () => {
     console.log(`Mock Xsol server listening on port ${xsolPort}`);
-    // checkMainServer();  // Start checking for the main server
+    checkMainServer();  // Start checking for the main server
 });
 
 // Uncomment these lines if you want to periodically send mock data
