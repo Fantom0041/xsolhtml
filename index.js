@@ -7,6 +7,14 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const port = 3000;
 
+// MOCK TO REMOVE 
+const photoFiles = [
+    "D1793379326S1728655200.jpgc",
+    "D1793379326S1728655298.jpgc",
+    "D438621323945S1702907564.jpgc"
+];
+
+
 // Import the C++ addon
 const xsolcrypt = require('./xsolcrypt-addon/build/Release/xsolcrypt.node');
 
@@ -63,14 +71,33 @@ async function processEventData(eventData) {
     console.log('Processing event data...');
     if (eventData.EVENTS && eventData.EVENTS.length > 0) {
         for (let event of eventData.EVENTS) {
+
+            let randomOrgPhoto = photoFiles[Math.floor(Math.random() * photoFiles.length)];
+            let mockOrgPhotoPath = `test_pic/${randomOrgPhoto}`;
+
+
             if (event.ORG_PHOTO_PATH) {
-                console.log(`Decoding original photo: ${event.ORG_PHOTO_PATH}`);
-                event.PHOTO_ORG = await decodeImage(event.ORG_PHOTO_PATH);
+                // console.log(`Decoding original photo: ${event.ORG_PHOTO_PATH}`);
+                console.log('Decoding mock original pic:', mockOrgPhotoPath);
+                event.PHOTO_ORG = await decodeImage(mockOrgPhotoPath);
                 console.log(`Original photo decoded: ${event.PHOTO_ORG ? 'success' : 'failed'}`);
+                // event.PHOTO_ORG = await decodeImage(event.ORG_PHOTO_PATH);
+                // console.log(`Original photo decoded: ${event.PHOTO_ORG ? 'success' : 'failed'}`);
             }
             if (event.CUR_PHOTO_PATH) {
-                console.log(`Decoding current photo: ${event.CUR_PHOTO_PATH}`);
-                event.PHOTO_CUR = await decodeImage(event.CUR_PHOTO_PATH);
+                 let randomCurPhoto = photoFiles[Math.floor(Math.random() * photoFiles.length)];
+                while (randomCurPhoto === event.ORG_PHOTO_PATH) {
+                    // Ensure current photo is different from original
+                    randomCurPhoto = photoFiles[Math.floor(Math.random() * photoFiles.length)];
+                }
+
+                // console.log(`Decoding current photo: ${event.CUR_PHOTO_PATH}`);
+                // event.PHOTO_CUR = await decodeImage(event.CUR_PHOTO_PATH);
+                // console.log(`Current photo decoded: ${event.PHOTO_CUR ? 'success' : 'failed'}`);
+                let mockCurPhotoPath = `test_pic/${randomCurPhoto}`;
+
+                console.log('Decoding mock current pic:', mockCurPhotoPath);
+                event.PHOTO_CUR = await decodeImage(mockCurPhotoPath);
                 console.log(`Current photo decoded: ${event.PHOTO_CUR ? 'success' : 'failed'}`);
             }
         }
