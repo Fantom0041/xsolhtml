@@ -84,16 +84,28 @@
         .event {
             position: relative;
             cursor: pointer;
-            padding: 8px 10px;
+            padding: 8px 10px 8px 30px; /* Zwiększony lewy padding */
             border: 1px solid #ccc;
             margin-bottom: 8px;
             border-radius: 5px;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            transition: box-shadow 0.3s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
             min-height: 50px;
             z-index: 1;
+            background-color: white; /* Białe tło */
+            color: black; /* Czarne napisy */
+        }
+        .event::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
         }
         .event.selected {
             box-shadow: 0 0 0 2px orange;
@@ -359,11 +371,11 @@
         function renderEvents() {
             const eventsContainer = document.getElementById('events');
             eventsContainer.innerHTML = events.map((event, index) => {
-                const backgroundColor = event.COLOR ? intToHexColor(parseInt(event.COLOR)) : '#f0f0f0';
-                console.log(`Event ${index} color: ${backgroundColor}`);
+                const eventColor = event.COLOR ? intToHexColor(parseInt(event.COLOR)) : '#f0f0f0';
+                console.log(`Event ${index} color: ${eventColor}`);
                 return `
                     <div id="event-${index}" class="event ${index === selectedEventIndex ? 'selected' : ''}" 
-                         onclick="selectEvent(${index})" style="background-color: ${backgroundColor};">
+                         onclick="selectEvent(${index})" style="--event-color: ${eventColor};">
                         <div class="event-left">
                             <p>${event.TICKET_NAME}</p>
                         </div>
@@ -382,6 +394,14 @@
                     </div>
                 `;
             }).join('');
+            
+            // Dodaj styl dla kolorowego paska
+            const style = document.createElement('style');
+            style.textContent = events.map((event, index) => {
+                const eventColor = event.COLOR ? intToHexColor(parseInt(event.COLOR)) : '#f0f0f0';
+                return `#event-${index}::before { background-color: ${eventColor}; }`;
+            }).join('\n');
+            document.head.appendChild(style);
         }
 
         function selectEvent(index) {
