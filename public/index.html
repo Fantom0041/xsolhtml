@@ -84,8 +84,8 @@
         .event {
             position: relative;
             cursor: pointer;
-            padding: 8px 10px 8px 30px; 
-            border: 1px solid #ccc; 
+            padding: 8px 10px 8px 30px; /* Zwiększony lewy padding */
+            border: 1px solid #ccc;
             margin-bottom: 8px;
             border-radius: 5px;
             transition: border-color 0.3s ease;
@@ -94,8 +94,8 @@
             align-items: center;
             min-height: 50px;
             z-index: 1;
-            background-color: white; 
-            color: black; 
+            background-color: white;
+            color: black;
         }
         .event::before {
             content: '';
@@ -217,7 +217,7 @@
             }
 
             .event {
-                padding: 8px 40px 8px 10px;
+                padding: 8px 40px 8px 30px; /* Zwiększony lewy padding */
             }
 
             .event-left p {
