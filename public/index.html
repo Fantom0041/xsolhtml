@@ -53,7 +53,7 @@
         }
         .photo-title {
             text-align: right;
-            margin-bottom: 0; /* Usunięto dolny margines */
+            margin-bottom: 0; 
             margin-top: 0;
             font-size: 12px;
             color: #666;
@@ -84,18 +84,18 @@
         .event {
             position: relative;
             cursor: pointer;
-            padding: 8px 10px 8px 30px; /* Zwiększony lewy padding */
-            border: 1px solid #ccc;
+            padding: 8px 10px 8px 30px; 
+            border: 1px solid #ccc; 
             margin-bottom: 8px;
             border-radius: 5px;
-            transition: box-shadow 0.3s ease;
+            transition: border-color 0.3s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
             min-height: 50px;
             z-index: 1;
-            background-color: white; /* Białe tło */
-            color: black; /* Czarne napisy */
+            background-color: white; 
+            color: black; 
         }
         .event::before {
             content: '';
@@ -108,7 +108,7 @@
             border-bottom-left-radius: 5px;
         }
         .event.selected {
-            box-shadow: 0 0 0 2px orange;
+            border-color: var(--event-color);
         }
         .event-left, .event-right {
             display: flex;
@@ -395,7 +395,7 @@
                 `;
             }).join('');
             
-            // Dodaj styl dla kolorowego paska
+          
             const style = document.createElement('style');
             style.textContent = events.map((event, index) => {
                 const eventColor = event.COLOR ? intToHexColor(parseInt(event.COLOR)) : '#f0f0f0';
@@ -406,7 +406,7 @@
 
         function selectEvent(index) {
             if (selectedEventIndex === index) {
-                // Odznacz event, jeśli jest już wybrany
+                
                 selectedEventIndex = null;
             } else {
                 selectedEventIndex = index;
@@ -425,12 +425,14 @@
 
         function updatePhotos() {
             if (selectedEventIndex === null) {
-                // Ukryj zdjęcia, gdy żaden event nie jest wybrany
+                
                 updatePhoto('originalPhoto', 'noOriginalPhoto', null);
                 updatePhoto('currentPhoto', 'noCurrentPhoto', null);
             } else {
                 const event = events[selectedEventIndex];
+                
                 updatePhoto('originalPhoto', 'noOriginalPhoto', event.PHOTO_ORG);
+                
                 updatePhoto('currentPhoto', 'noCurrentPhoto', event.PHOTO_CUR);
             }
         }
@@ -470,7 +472,7 @@
                     alert('Action ' + action + ' failed');
                 }
             });
-            // Zamknij menu akcji po wykonaniu akcji
+           
             document.getElementById(`event-actions-${index}`).style.display = 'none';
         }
 
